@@ -14,6 +14,8 @@ MOD_PREF_PREFIX="mod.cleanedurlbarext."
 # The only files Zen reads from a mod folder (it never opens a local readme.md).
 MOD_FILES="chrome.css preferences.json"
 BACKUP_SUFFIX=".cleanedurlbarext.bak"
+# Highest lib/catalogue.txt revision the user has been asked about.
+QUESTIONS_SEEN_PREF="${MOD_PREF_PREFIX}questions-seen"
 
 LIB_DIR="$ROOT_DIR/lib"
 
@@ -519,17 +521,24 @@ is_installed() {
 
 # --------------------------------------------------------------- catalogue ----
 
-# Loads lib/catalogue.txt into parallel arrays (index = question number).
+# Loads lib/catalogue.txt into parallel arrays (index = question number),
+# RENAMED_OLD/RENAMED_NEW, and CAT_REVISION (the highest "since").
 load_catalogue() {
-    CAT_KIND=() CAT_PREF=() CAT_DEFAULT=() CAT_DEP=() CAT_QUESTION=() CAT_HELP=() CAT_CHOICES=() CAT_SECTION=()
-    SECTION_TITLE=() SECTION_DESC=()
-    local kind pref def dep question help choices
-    while IFS='|' read -r kind pref def dep question help choices; do
+    CAT_KIND=() CAT_PREF=() CAT_DEFAULT=() CAT_DEP=() CAT_QUESTION=() CAT_HELP=() CAT_CHOICES=() CAT_SECTION=() CAT_SINCE=()
+    SECTION_TITLE=() SECTION_DESC=() RENAMED_OLD=() RENAMED_NEW=()
+    CAT_REVISION=1
+    local kind pref def dep question help choices since
+    while IFS='|' read -r kind pref def dep question help choices since; do
         case "$kind" in
             '' | '#'*) continue ;;
             @section)
                 SECTION_TITLE+=("$pref")
                 SECTION_DESC+=("$def")
+                continue
+                ;;
+            @renamed)
+                RENAMED_OLD+=("$pref")
+                RENAMED_NEW+=("$def")
                 continue
                 ;;
         esac
@@ -541,5 +550,45 @@ load_catalogue() {
         CAT_HELP+=("$help")
         CAT_CHOICES+=("$choices")
         CAT_SECTION+=($((${#SECTION_TITLE[@]} - 1)))
+        CAT_SINCE+=("$since")
+        [ "$since" -gt "$CAT_REVISION" ] && CAT_REVISION=$since
     done <"$LIB_DIR/catalogue.txt"
+}
+
+# Queues moving saved values of renamed preferences to their new names and sets
+# MIGRATED to the list of "old -> new". A value already saved under the new name
+# wins. Needs load_catalogue.
+migrate_renamed_prefs() {
+    local i raw
+    MIGRATED=()
+    for ((i = 0; i < ${#RENAMED_OLD[@]}; i++)); do
+        raw=$(pref_get "$PREFS_JS" "${RENAMED_OLD[$i]}")
+        [ -n "$raw" ] || continue
+        [ -n "$(pref_get "$PREFS_JS" "${RENAMED_NEW[$i]}")" ] || pref_set "${RENAMED_NEW[$i]}" "$raw"
+        pref_unset "${RENAMED_OLD[$i]}"
+        MIGRATED+=("${RENAMED_OLD[$i]} -> ${RENAMED_NEW[$i]}")
+    done
+}
+
+# The catalogue revision the user last saw (1 = the first list, also when unknown).
+questions_seen() {
+    local raw
+    raw=$(pref_get "$PREFS_JS" "$QUESTIONS_SEEN_PREF")
+    case "$raw" in '' | *[!0-9]*) raw=1 ;; esac
+    printf '%s' "$raw"
+}
+
+# Queues recording that the user has seen every current question. Needs load_catalogue.
+mark_questions_seen() {
+    [ "$(questions_seen)" = "$CAT_REVISION" ] && [ -n "$(pref_get "$PREFS_JS" "$QUESTIONS_SEEN_PREF")" ] && return 0
+    pref_set "$QUESTIONS_SEEN_PREF" "$CAT_REVISION"
+}
+
+# Prints "old -> new" for each pending rename; used by update.sh to decide whether
+# there is anything to do.
+pending_renames() {
+    local i
+    for ((i = 0; i < ${#RENAMED_OLD[@]}; i++)); do
+        [ -n "$(pref_get "$PREFS_JS" "${RENAMED_OLD[$i]}")" ] && printf '%s -> %s\n' "${RENAMED_OLD[$i]}" "${RENAMED_NEW[$i]}"
+    done
 }

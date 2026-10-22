@@ -95,6 +95,10 @@ main() {
 
     previous=$(installed_version)
     install_mod_files
+    # Installing offers every behaviour question, so all current ones count as seen.
+    load_catalogue
+    migrate_renamed_prefs
+    mark_questions_seen
     prefs_apply
     if [ -n "$previous" ]; then
         ok "Reinstalled $MOD_NAME ($previous -> $version). Your settings were kept."
@@ -103,6 +107,10 @@ main() {
     fi
     say "    Start Zen: the mod is applied a moment after startup. Customise it in"
     say "    Settings > Zen Mods > $MOD_NAME."
+    if [ ${#MIGRATED[@]} -gt 0 ]; then
+        ok "Moved settings that Zen renamed:"
+        printf '    %s\n' "${MIGRATED[@]}"
+    fi
 
     if [ "$configure" = ask ] && open_tty; then
         say ""

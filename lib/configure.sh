@@ -1,19 +1,25 @@
 # shellcheck shell=bash
 # The URL bar behaviour questions: the about:config preferences listed in
-# lib/catalogue.txt. Used by configure.sh and, when asked, by install.sh.
+# lib/catalogue.txt. Used by configure.sh and, when asked, by install.sh and
+# update.sh.
 # Expects lib/common.sh to be loaded and PROFILE paths to be set.
 # shellcheck disable=SC2153 # CAT_* and SECTION_* arrays come from load_catalogue in lib/common.sh
 
 # Per question index:
-#   CUR_RAW[i]  value saved in prefs.js ("" = not set, Zen's default applies)
+#   CUR_RAW[i]  value saved in prefs.js ("" = not set, Zen's default applies);
+#               a value still saved under an old name (@renamed) counts as saved
 #   NEW_RAW[i]  answer: "" = keep, "-" = back to Zen's default, else the raw value
 cfg_load_state() {
-    local i
+    local i j
     load_catalogue
     CUR_RAW=() NEW_RAW=()
     for ((i = 0; i < ${#CAT_PREF[@]}; i++)); do
         CUR_RAW[i]=$(pref_get "$PREFS_JS" "${CAT_PREF[$i]}")
         NEW_RAW[i]=""
+        for ((j = 0; j < ${#RENAMED_NEW[@]}; j++)); do
+            [ -z "${CUR_RAW[i]}" ] && [ "${RENAMED_NEW[$j]}" = "${CAT_PREF[$i]}" ] &&
+                CUR_RAW[i]=$(pref_get "$PREFS_JS" "${RENAMED_OLD[$j]}")
+        done
     done
 }
 
@@ -181,8 +187,11 @@ cfg_summary() {
     return $any
 }
 
+# Saves the answers, moves renamed preferences and records the questions as seen.
 cfg_write() {
     local i changed=()
+    migrate_renamed_prefs
+    mark_questions_seen
     for ((i = 0; i < ${#CAT_PREF[@]}; i++)); do
         case "${NEW_RAW[$i]}" in
             "") continue ;;
@@ -202,7 +211,7 @@ cfg_section_picked() {
 }
 
 configure_interactive() {
-    local i s picks="" last_section=-1
+    local i s picks=""
     open_tty || die "configure needs a terminal to ask its questions."
     cfg_load_state
 
@@ -231,9 +240,19 @@ configure_interactive() {
         say "Please enter numbers from the list, or a."
     done
 
+    local list=""
     for ((i = 0; i < ${#CAT_PREF[@]}; i++)); do
+        cfg_section_picked "${CAT_SECTION[$i]}" "$picks" && list="$list $i"
+    done
+    cfg_run_questions "$list"
+}
+
+# Asks the questions with the given indices (space-separated), shows the
+# summary and saves on confirmation. Needs cfg_load_state and Zen closed.
+cfg_run_questions() {
+    local i s last_section=-1
+    for i in $1; do
         s=${CAT_SECTION[$i]}
-        cfg_section_picked "$s" "$picks" || continue
         if [ "$s" != "$last_section" ]; then
             say ""
             say "$C_BLUE$C_BOLD== ${SECTION_TITLE[$s]} ==$C_RESET"
@@ -249,6 +268,9 @@ configure_interactive() {
 
     say ""
     if ! cfg_summary >"$WORK_DIR/summary"; then
+        # Still worth saving: which questions were seen, and any renamed preference.
+        require_zen_closed
+        cfg_write
         ok "Nothing to change."
         return 0
     fi

@@ -67,14 +67,14 @@ run() {
     local script=$1
     shift
     (cd "$T" && HOME=$HOME_DIR XDG_CONFIG_HOME="" PATH="$SHIM:$PATH" NO_COLOR=1 TMPDIR="$T/tmp" \
-        "$TEST_BASH" "$ROOT/$script" "$@" </dev/null >"$T/out" 2>&1)
+        "$TEST_BASH" "${PROJ:-$ROOT}/$script" "$@" </dev/null >"$T/out" 2>&1)
 }
 
 # run_tty "answers" SCRIPT ARGS... (answers fed to a terminal, one per line)
 run_tty() {
     local answers=$1 script=$2 cmd
     shift 2
-    cmd=$(printf '%q ' "$TEST_BASH" "$ROOT/$script" "$@")
+    cmd=$(printf '%q ' "$TEST_BASH" "${PROJ:-$ROOT}/$script" "$@")
     (cd "$T" && printf '%s' "$answers" | HOME=$HOME_DIR XDG_CONFIG_HOME="" PATH="$SHIM:$PATH" NO_COLOR=1 TMPDIR="$T/tmp" \
         script -qec "$cmd" /dev/null >"$T/out" 2>&1)
     sed -i 's/\r$//' "$T/out"
@@ -139,7 +139,8 @@ EOF
     check "entry enabled" [ "$(json_eval "$p/zen-themes.json" 'd["zen-cleaned-url-bar-extended"]["enabled"]')" = True ]
     check "entry has preferences url" [ "$(json_eval "$p/zen-themes.json" 'd["zen-cleaned-url-bar-extended"]["preferences"].startswith("https://")')" = True ]
     check "user's own mod value kept" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.blur", "3px");'
-    check "no option defaults written (Zen writes them)" [ "$(grep -c '^user_pref("mod\.cleanedurlbarext\.' "$p/prefs.js")" -eq 1 ]
+    check "no option defaults written (Zen writes them)" [ "$(grep -v questions-seen "$p/prefs.js" | grep -c '^user_pref("mod\.cleanedurlbarext\.')" -eq 1 ]
+    check "install records the questions as seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 1);'
     check "rebuild requested (last-update cleared)" no_line "$p/prefs.js" 'zen.mods.last-update'
     check "unrelated pref kept" has_line "$p/prefs.js" 'user_pref("browser.urlbar.suggest.searches", false);'
     check "prefs.js permissions kept" [ "$(mode_of "$p/prefs.js")" = "rw-------" ]
@@ -189,7 +190,7 @@ EOF
     check "update keeps other mods" [ "$(json_eval "$p/zen-themes.json" '"other-mod" in d')" = True ]
     check "update requests a rebuild" no_line "$p/prefs.js" 'zen.mods.last-update'
     check "update keeps user value" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.blur", "3px");'
-    check "update adds no option defaults" [ "$(grep -c '^user_pref("mod\.cleanedurlbarext\.' "$p/prefs.js")" -eq 1 ]
+    check "update adds no option defaults" [ "$(grep -v questions-seen "$p/prefs.js" | grep -c '^user_pref("mod\.cleanedurlbarext\.')" -eq 1 ]
 
     # update: changed files with the same version are refreshed too.
     echo '{}' >"$m/preferences.json"
@@ -314,6 +315,101 @@ test_invalid_themes_json() {
     run update.sh
     check "invalid zen-themes.json stops the update" [ $? -ne 0 ]
     check "failed update leaves the installed files alone" cmp -s "$T/css-before" "$p/chrome/zen-themes/zen-cleaned-url-bar-extended/chrome.css"
+}
+
+# A newer release of the project: Zen renamed a preference and a question was added.
+make_newer_project() {
+    NEWER="$T/newer-project"
+    rm -rf "$NEWER"
+    cp -R "$ROOT" "$NEWER"
+    python3 - "$NEWER/lib/catalogue.txt" <<'EOF'
+import sys
+p = sys.argv[1]; lines = open(p).read().split("\n")
+out = []
+for l in lines:
+    if l.startswith("@section|Opening"):
+        out.append("@renamed|browser.urlbar.oldTrimWww|browser.urlbar.trimWww")
+    out.append(l)
+    if l.startswith("bool|browser.urlbar.suggest.bookmark|"):
+        out.append("bool|browser.urlbar.suggest.newthing|true||Suggest the new thing?|||2")
+open(p, "w").write("\n".join(out))
+EOF
+}
+
+test_update_behaviour() {
+    new_home
+    local zen="$HOME_DIR/.zen" p fakezen pid
+    make_profile "$zen" "Profiles/u.u"
+    printf '[Profile0]\nName=U\nIsRelative=1\nPath=Profiles/u.u\nDefault=1\n' >"$zen/profiles.ini"
+    p="$zen/Profiles/u.u"
+    run install.sh --no-configure
+    make_newer_project
+
+    # Without a terminal: renames are moved, new questions only announced.
+    echo 'user_pref("browser.urlbar.oldTrimWww", true);' >>"$p/prefs.js"
+    PROJ=$NEWER run configure.sh --list
+    check "--list shows a value saved under the old name" grep -q 'browser.urlbar.trimWww  *on$' "$T/out"
+    PROJ=$NEWER run update.sh
+    check "update with a rename succeeds" [ $? -eq 0 ]
+    check "renamed value moved to the new name" has_line "$p/prefs.js" 'user_pref("browser.urlbar.trimWww", true);'
+    check "old name removed" no_line "$p/prefs.js" 'oldTrimWww'
+    check "rename reported" out_has "browser.urlbar.oldTrimWww -> browser.urlbar.trimWww"
+    check "new question announced" out_has "1 new URL bar behaviour question(s)"
+    check "new question listed" out_has "Suggest the new thing?"
+    check "without a terminal it points to configure.sh" out_has "run configure.sh"
+    check "unanswered questions are not marked seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 1);'
+
+    # A value already saved under the new name wins over the old one.
+    echo 'user_pref("browser.urlbar.oldTrimWww", false);' >>"$p/prefs.js"
+    PROJ=$NEWER run update.sh
+    check "new name keeps its own value" has_line "$p/prefs.js" 'user_pref("browser.urlbar.trimWww", true);'
+    check "old name dropped anyway" no_line "$p/prefs.js" 'oldTrimWww'
+
+    # Only new questions, Zen running, no terminal: nothing to write, so it works.
+    fakezen="$T/bin/zen"
+    mkdir -p "$T/bin"
+    cp "$(command -v sleep)" "$fakezen"
+    "$fakezen" 30 &
+    pid=$!
+    ln -sf "127.0.0.1:+$pid" "$p/lock"
+    cp "$p/prefs.js" "$T/prefs-before"
+    PROJ=$NEWER run update.sh
+    check "only-new-questions update works while Zen runs" [ $? -eq 0 ]
+    check "and writes nothing" cmp -s "$T/prefs-before" "$p/prefs.js"
+    kill "$pid" 2>/dev/null
+    wait "$pid" 2>/dev/null
+    rm -f "$p/lock"
+
+    # Declining keeps them for the next update.
+    PROJ=$NEWER run_tty $'n\n' update.sh
+    check "declined questions are offered again later" out_has "offered again at the next update"
+    check "declining does not mark them seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 1);'
+
+    # Answering: only the new question is asked, then saved and marked seen.
+    PROJ=$NEWER run_tty $'y\nn\ny\n' update.sh
+    check "only the new question is asked" [ "$(grep -c 'Currently:' "$T/out")" -eq 1 ]
+    check "new answer saved" has_line "$p/prefs.js" 'user_pref("browser.urlbar.suggest.newthing", false);'
+    check "questions marked seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 2);'
+    PROJ=$NEWER run update.sh
+    check "afterwards everything is up to date" out_has "already up to date"
+
+    # configure.sh also marks questions seen and moves renamed values.
+    sed -i '/questions-seen/d' "$p/prefs.js"
+    echo 'user_pref("browser.urlbar.oldTrimWww", true);' >>"$p/prefs.js"
+    sed -i '/browser.urlbar.trimWww/d' "$p/prefs.js"
+    PROJ=$NEWER run_tty $'1\nq\n' configure.sh
+    check "configure marks questions seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 2);'
+    check "configure moves renamed values" has_line "$p/prefs.js" 'user_pref("browser.urlbar.trimWww", true);'
+
+    # uninstall --reset-prefs resets old names too; leftovers go without the mod.
+    echo 'user_pref("browser.urlbar.oldTrimWww", true);' >>"$p/prefs.js"
+    PROJ=$NEWER run uninstall.sh -y --reset-prefs
+    check "reset covers old names" no_line "$p/prefs.js" 'oldTrimWww'
+    check "reset lists the old name" out_has "browser.urlbar.oldTrimWww"
+    echo 'user_pref("mod.cleanedurlbarext.questions-seen", 2);' >>"$p/prefs.js"
+    PROJ=$NEWER run uninstall.sh -y
+    check "leftover mod settings removed without the mod" no_line "$p/prefs.js" 'mod.cleanedurlbarext.'
+    check "leftover removal reported" out_has "Removed the settings"
 }
 
 test_backup_removal_failure() {
@@ -475,7 +571,7 @@ test_pref_string_escaping() {
 
 for t in test_bootstrap_blocks_identical test_install_legacy_root test_xdg_flatpak_and_ambiguity \
     test_absolute_profile_and_fresh_files test_macos_layout test_invalid_themes_json test_zen_running \
-    test_configure test_pref_string_escaping test_backup_removal_failure test_nothing_left_behind; do
+    test_configure test_pref_string_escaping test_backup_removal_failure test_update_behaviour test_nothing_left_behind; do
     $t
 done
 
