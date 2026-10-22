@@ -67,9 +67,10 @@
     }
   }
 
-  /* The line between the text field and the results. The original mod removed it
-     through `.urlbarView-body-inner`, an element Firefox no longer has. */
+  /* The line between the text field and the results: a border of
+     .urlbarView-body-inner up to Firefox 157, of .urlbarView-results since 158. */
   @media -moz-pref("mod.cleanedurlbarext.panel.hideseparator") {
+    #urlbar .urlbarView-body-inner,
     #urlbar .urlbarView-results {
       border-top: none !important;
     }
