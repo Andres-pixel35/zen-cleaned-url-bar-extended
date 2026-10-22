@@ -19,9 +19,15 @@ Close Zen, then run in a terminal (Linux or macOS):
 curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/install.sh | bash
 ```
 
-That's all: the script finds your Zen profile, installs the mod and keeps any settings you already
-had. Start Zen and the new URL bar appears a moment after startup. At the end it offers to walk you
-through the URL bar's behaviour options (you can do that any time later with `configure.sh`).
+That's all: the script finds your Zen profile and installs the look of the URL bar (the mod), keeping
+any settings you already had. Then it asks whether you also want to set the URL bar's behaviour
+(floating mode, which suggestions appear...); if you answer yes it asks those questions right away and
+saves your answers. Pass `--configure` to go straight to the questions, or `--no-configure` to skip
+them, and nothing is asked. Start Zen and the new URL bar appears a moment after startup.
+
+Nothing that the script downloads stays on your computer: it is downloaded to a temporary folder that
+is deleted when the script ends (also when it fails or you cancel it). What stays is only what Zen
+uses, see [What is kept on your computer](#what-is-kept-on-your-computer).
 
 If you use several Zen profiles (or Zen and Zen Twilight), the script asks which one to use. To
 choose the profile yourself, pass its folder with `-p` (in Zen: `about:support` > **Profile
@@ -41,7 +47,7 @@ reused; this mod has its own.)
 
 | What | Command |
 |---|---|
-| Update to the latest version (keeps your settings) | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/update.sh \| bash` |
+| Update the look to the latest version, only if it changed (keeps your settings) | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/update.sh \| bash` |
 | Answer questions about the URL bar's behaviour | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/configure.sh \| bash` |
 | Show the current behaviour settings | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/configure.sh \| bash -s -- --list` |
 | Uninstall | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/uninstall.sh \| bash` |
@@ -55,8 +61,10 @@ which would undo the changes. If Zen is open, the script asks you to close it an
 
 The scripts find profiles in these places: `~/.zen` and `~/.config/zen` (Linux),
 `~/.var/app/app.zen_browser.zen/` (Flatpak) and `~/Library/Application Support/zen` (macOS).
-They need only `bash` (3.2 or newer, so the one built into macOS works), `curl`, `tar` and the usual
-system tools; no jq or python.
+
+`update.sh` only looks at the look of the URL bar, because that is the only part of this project that
+stays in Zen: it compares the installed `chrome.css` and `preferences.json` with the latest ones and
+replaces them only when they differ. When they are the same it changes nothing (and Zen may stay open).
 
 <details>
 <summary>Windows, or installing by hand</summary>
@@ -65,13 +73,77 @@ The scripts are for Linux and macOS. On Windows (or to do it yourself):
 
 1. In Zen open `about:support` and open the **Profile Directory**. Close Zen.
 2. Create the folder `chrome/zen-themes/zen-cleaned-url-bar-extended` inside the profile and copy
-   `chrome.css`, `preferences.json` and `readme.md` from this repository into it.
+   `chrome.css` and `preferences.json` from this repository into it.
 3. Open `zen-themes.json` in the profile (create it with `{}` if it does not exist) and add the content
    of [`theme.json`](theme.json) as a new entry with the key `"zen-cleaned-url-bar-extended"` and an
    extra `"enabled": true`.
-4. Start Zen, open `about:config` and delete `zen.mods.last-update` (this makes Zen rebuild its mod
-   stylesheet right away; otherwise toggle any mod setting in Settings > Zen Mods).
+4. Start Zen, open `about:config`, delete `zen.mods.last-update` and restart Zen: Zen rebuilds its mod
+   stylesheet at the next start when that preference is missing. (Changing any setting of any mod in
+   Settings > Zen Mods also rebuilds it, without a restart.)
 </details>
+
+## Requirements
+
+### Zen Browser
+
+**Zen 1.16b or newer** (Firefox 143 or newer) on Linux or macOS. **Everything** (every look option and
+every behaviour question) needs **Zen 1.23.3b or newer**. Older versions lack some of Zen's buttons and
+preferences, so those options simply do nothing there:
+
+| Zen version | Look (mod settings) | Behaviour questions with no effect (the preference does not exist yet) |
+|---|---|---|
+| 1.15.5b and older | **Not supported**: before Firefox 143 the URL bar's background element has another name | - |
+| 1.16b | All except hiding the site data, split view and copy URL buttons (Zen does not have them yet) | `zen.urlbar.open-on-startup`, `zen.urlbar.show-pip-button`, `zen.urlbar.show-contextual-id`, `zen.urlbar.single-toolbar-show-copy-url`, `browser.urlbar.closeOnWindowBlur`, `browser.urlbar.trimWww`, `browser.urlbar.share-button.enabled`, `browser.urlbar.shortcuts.workspaces`, `zen.theme.acrylic-urlbar`, `zen.urlbar.show-pinned`, `zen.urlbar.show-sponsored` |
+| 1.17b | All except hiding the split view button | the same, except `zen.urlbar.show-contextual-id`, which works |
+| 1.18b, 1.19.9b, 1.21b | All | in 1.19.9b: `browser.urlbar.trimWww`, `browser.urlbar.share-button.enabled`, `browser.urlbar.shortcuts.workspaces`, `zen.theme.acrylic-urlbar`, `zen.urlbar.show-pinned`, `zen.urlbar.show-sponsored` |
+| 1.22b, 1.23b | All | `zen.theme.acrylic-urlbar` (added in 1.23.1b), `zen.urlbar.show-pinned` and `zen.urlbar.show-sponsored` (added in 1.23.3b) |
+| 1.23.3b, 1.23.4b | All | none |
+
+A version between two rows works at least as well as the row above it: Zen and Firefox only added
+these buttons and preferences over time, never removed them.
+
+How this was checked: on the Linux builds of Zen 1.15.5b, 1.16b, 1.17b, 1.18b, 1.19.9b, 1.21b, 1.22b,
+1.23b and 1.23.4b, `install.sh` was run on a fresh profile, Zen was started (it applied the mod by
+itself), and every look option was set and read back from the real URL bar; the blur was also checked
+on screen. Which preferences exist was read from the 1.16b, 1.17b, 1.19.9b, 1.22b, 1.23b and 1.23.4b
+builds; the versions that added `zen.theme.acrylic-urlbar`, `zen.urlbar.show-pinned` and
+`zen.urlbar.show-sponsored` come from Zen's source code. Zen versions newer than 1.23.4b
+were not available to test: Zen changes its URL bar now and then, so a future version may need an
+update of this mod.
+
+### For the scripts
+
+Nothing to install on macOS or on a normal Linux desktop: everything below comes with the system.
+No jq, python, node or root access is needed, and nothing is installed system-wide.
+
+| Tool | Linux package | Used for |
+|---|---|---|
+| `bash` 3.2 or newer (macOS's built-in bash works) | `bash` | running the scripts |
+| `curl` | `curl` | downloading the project (only when run with `curl ... \| bash`) |
+| `tar` and `gzip` | `tar`, `gzip` | unpacking that download |
+| `awk` (any: gawk, mawk, busybox or BSD awk) | `gawk` or `mawk` | reading `profiles.ini`, `zen-themes.json` and `prefs.js` |
+| `sed`, `grep` | `sed`, `grep` | small text edits and checks |
+| `cat`, `cp`, `mv`, `rm`, `mkdir`, `mktemp`, `chmod`, `ls`, `tr`, `dirname`, `readlink`, `uname` | `coreutils` | file handling |
+| `pgrep` (or `ps`) | `procps` / `procps-ng` | telling whether Zen is running |
+| `lsof` (macOS only, built in) | - | telling whether Zen is running on macOS |
+
+The mod itself needs nothing: Zen loads it with its own mod system.
+
+### What is kept on your computer
+
+Only what Zen uses, all inside your Zen profile:
+
+- `chrome/zen-themes/zen-cleaned-url-bar-extended/chrome.css` and `preferences.json`: the look of the
+  URL bar and the list of its settings.
+- The mod's entry in `zen-themes.json` (Zen's list of installed mods).
+- Your settings, in Zen's `prefs.js`: the mod's own (`mod.cleanedurlbarext.*`) and any URL bar
+  preference you changed (those are normal Zen preferences).
+- `prefs.js.cleanedurlbarext.bak` and `zen-themes.json.cleanedurlbarext.bak`: a copy of those two files
+  from before the last change a script made, in case you need to undo it.
+
+The scripts themselves (`install.sh`, `configure.sh`, ...) are not kept: with `curl ... | bash` they
+are downloaded to a temporary folder that is deleted when they finish. `uninstall.sh` removes the mod
+folder, its entry and its `mod.cleanedurlbarext.*` settings.
 
 ## Customise
 
@@ -262,7 +334,7 @@ Start what you type with one of these characters and a space to search only one 
   its mod-update check runs at startup, which happens whenever `zen.mods.last-update` is unset. The
   scripts clear it, so the change shows up a moment after the next start. (That check also looks for
   updates of your other mods, as Zen does on its own every few weeks.)
-- The mod's options are preferences named `mod.cleanedurlbarext.*`. The installer writes their default
+- The mod's options are preferences named `mod.cleanedurlbarext.*`. Zen writes their default
   values; Zen's settings page then edits them. Text options reach the CSS as variables, and every
   rule is wrapped in `@media -moz-pref(...)`, which is why an empty field means "Zen default".
 - Before changing `prefs.js` or `zen-themes.json` the scripts save a copy next to them, ending in
@@ -277,8 +349,9 @@ Start what you type with one of these characters and a space to search only one 
   set.
 - **Selectors updated** for current Zen: `.urlbar-background` (was `#urlbar-background`) and
   `[breakout-extend]` without a value (Zen 1.21.2b+), also from matteo-tafuro's fork.
-- **The line between the text field and the results is removed again**: the original removed it
-  through `.urlbarView-body-inner`, an element Firefox no longer has.
+- **The line between the text field and the results is removed again**: Firefox 158 (Zen 1.23.3b)
+  moved it from `.urlbarView-body-inner`, where the original removed it, to `.urlbarView-results`;
+  both are handled now.
 - **Dark mode colours follow Zen's theme**: the custom colours use `light-dark()`, so they follow the
   theme chosen in Zen even when it differs from the system theme (`prefers-color-scheme` does not).
 - **Icons on a selected result stay readable** with the subtle or transparent icon background (Zen
