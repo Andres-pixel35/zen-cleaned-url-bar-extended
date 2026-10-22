@@ -1,0 +1,11 @@
+{
+    "id": "zen-cleaned-url-bar-extended",
+    "name": "Cleaned URL Bar Extended",
+    "description": "A clean, glassy URL bar where every look and behaviour setting can be personalised, including the URL bar options from about:config.",
+    "homepage": "https://github.com/andres-pixel35/zen-cleaned-url-bar-extended",
+    "style": "https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/chrome.css",
+    "readme": "https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/readme.md",
+    "preferences": "https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/preferences.json",
+    "author": "andres-pixel35",
+    "version": "1.0.0"
+}
