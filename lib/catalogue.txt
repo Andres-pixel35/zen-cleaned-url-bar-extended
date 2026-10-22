@@ -1,0 +1,86 @@
+# URL bar about:config preferences asked by configure.sh.
+#
+# Every bool and choice preference listed here is also exposed in preferences.json
+# (Zen Settings > Mods); integer preferences only live here because Zen's mod
+# settings page can't edit numbers (tests/test_consistency.sh checks both stay in sync).
+#
+# Line formats (fields separated by "|", no "|" allowed inside a field):
+#   @section|<title>|<description>
+#   <kind>|<pref>|<zen default>|<depends on>|<question>|<help>|<choices>
+#
+#   kind     bool, int or choice (choice = string preference with fixed values).
+#   default  Zen 1.23 default. Only used for display: "reset" removes the user value.
+#   depends  Optional pref that must be true (or false when prefixed with "!") for
+#            the question to make sense; otherwise the question is skipped.
+#   choices  For choice (and optionally int): value=Label;value=Label
+
+@section|Opening and behaviour|How the URL bar opens, where results open and how it reacts to focus.
+choice|zen.urlbar.behavior|floating-on-type||How should the URL bar open?|Floating = it pops up in the centre of the window, like a command palette.|normal=Expand in place, never float;floating-on-type=Float when opened with the keyboard (Ctrl+L, Ctrl+T), expand in place when clicked;float=Always float in the centre
+bool|zen.urlbar.replace-newtab|true||Open the URL bar instead of a blank page when you open a new tab?|With this on, Ctrl+T or the new-tab button shows the URL bar and only creates a tab once you pick something.|
+int|zen.urlbar.wait-to-clear|45000|zen.urlbar.replace-newtab|How long, in milliseconds, should Zen remember what you typed in a new-tab URL bar you dismissed?|Reopening the new-tab URL bar within this time restores your text. 45000 = 45 seconds, 0 = forget immediately.|
+bool|zen.urlbar.open-on-startup|true||Open the URL bar automatically when Zen starts on an empty tab?||
+bool|browser.urlbar.openintab|false||Open what you pick in the URL bar in a new tab instead of the current one?||
+bool|browser.urlbar.switchTabs.adoptIntoActiveWindow|false||When a "Switch to tab" result belongs to another window, move that tab into the current window?|Off = Zen jumps to the other window instead.|
+bool|zen.urlbar.enable-overrides|false||Let Shift, Alt or Ctrl change what the selected result does?|Example: holding Shift on a "Switch to tab" result visits the page in the current tab instead of switching.|
+bool|browser.urlbar.closeOnWindowBlur|false||Close the URL bar dropdown when the Zen window loses focus?||
+bool|browser.urlbar.focusContentDocumentOnEsc|true||Move focus back to the page when you press Esc in an empty URL bar?||
+
+@section|Address display|How the address of the current page is shown.
+bool|zen.urlbar.show-domain-only-in-sidebar|true||In the single-toolbar layout, show only the domain (example.com) instead of the full address?|When this is on, the trimming questions below only affect the full address shown while editing.|
+bool|browser.urlbar.trimURLs|true||Hide "http://" and trailing slashes in addresses?||
+bool|browser.urlbar.trimHttps|true||Also hide "https://"?||
+bool|browser.urlbar.trimWww|false||Hide a leading "www."?||
+bool|browser.urlbar.untrimOnUserInteraction.featureGate|true||Show the full address (with https://) as soon as you click into the URL bar?||
+bool|browser.urlbar.decodeURLsOnCopy|false||Copy addresses in readable form (for example a space instead of %20)?||
+
+@section|Buttons and icons|Buttons Zen itself can show or hide in the URL bar (the mod adds more icon options in Zen Settings > Mods).
+bool|zen.urlbar.show-protections-icon|false||Show the tracking-protection shield icon?||
+bool|zen.urlbar.show-pip-button|false||Show the Picture-in-Picture button when a page plays video?||
+bool|zen.urlbar.show-contextual-id|false||Show the container label when a tab is in a container?||
+bool|zen.urlbar.single-toolbar-show-copy-url|true||Show the "Copy URL" button in the single-toolbar layout?||
+bool|browser.urlbar.share-button.enabled|false||Show the Share button?||
+bool|zen.theme.acrylic-urlbar|false||Use Zen's own frosted-glass background for the open URL bar?|The mod's "Panel background" setting replaces it unless that setting is left on "Zen default".|
+
+@section|Suggestions|Which kinds of results appear in the dropdown.
+bool|browser.urlbar.suggest.history|true||Suggest pages from your browsing history?||
+bool|browser.urlbar.suggest.bookmark|true||Suggest bookmarks?||
+bool|browser.urlbar.suggest.openpage|true||Suggest tabs you already have open ("Switch to tab")?||
+bool|browser.urlbar.suggest.remotetab|true||Suggest tabs open on your other synced devices?|Needs Zen Sync with tabs syncing enabled.|
+bool|zen.urlbar.show-pinned|true||When the URL bar is empty, include your pinned shortcuts?|The empty URL bar shows your top sites; this controls the pinned ones among them.|
+bool|zen.urlbar.show-sponsored|false||When the URL bar is empty, include sponsored shortcuts?||
+bool|browser.urlbar.suggest.engines|true||Suggest search engines whose name or keyword matches what you type (tab-to-search)?||
+bool|browser.urlbar.suggest.clipboard|true||Suggest the link you just copied?||
+bool|browser.urlbar.suggest.calculator|true||Show a calculator result when you type a math expression?||
+bool|browser.urlbar.unitConversion.enabled|true||Show unit conversions (for example "10 km to mi")?||
+bool|browser.urlbar.suggest.recentsearches|true||Suggest your recent searches when the URL bar is empty?||
+int|browser.urlbar.recentsearches.maxResults|5|browser.urlbar.suggest.recentsearches|How many recent searches should be shown at most?||
+bool|browser.urlbar.quickactions.enabled|true||Enable Firefox quick actions (for example "Settings", "Clear history", "Downloads")?||
+bool|browser.urlbar.suggest.quickactions|true|browser.urlbar.quickactions.enabled|Show quick actions among normal results?|Off = they only appear when you type "> " to enter quick-action mode.|
+bool|zen.urlbar.suggestions.quick-actions|true||Suggest Zen commands (for example "Toggle compact mode", "New split view")?||
+bool|browser.urlbar.contextualSearch.enabled|true||Offer to search the current site when it has its own search engine?||
+bool|browser.urlbar.autoFill|true||Autocomplete addresses inline as you type?||
+bool|browser.urlbar.groupLabels.enabled|false||Show group headings above kinds of results?||
+bool|browser.urlbar.deduplication.enabled|true||Merge history results that only differ by their #anchor?||
+int|browser.urlbar.maxRichResults|10||How many results should the dropdown show at most?|The mod's "Results list max height" setting controls how many fit before scrolling.|
+
+@section|Search|What happens with text that is not an address, and search-engine suggestions.
+bool|keyword.enabled|true||Search with your default engine when what you type is not an address?|Off = everything you type is treated as an address.|
+bool|browser.search.suggest.enabled|false||Ask your search engine for suggestions as you type?|This sends what you type to the search engine. It is the master switch for the next questions.|
+bool|browser.urlbar.suggest.searches|true|browser.search.suggest.enabled|Show those search suggestions in the URL bar?||
+bool|browser.urlbar.showSearchSuggestionsFirst|true|browser.search.suggest.enabled|Show search suggestions above history and bookmarks?||
+bool|browser.search.suggest.enabled.private|false|browser.search.suggest.enabled|Also show search suggestions in private windows?||
+bool|browser.urlbar.richSuggestions.tail|true|browser.search.suggest.enabled|Show "tail" suggestions that complete only the end of a long query?||
+bool|browser.formfill.enable|false||Remember search and form history?|Needed to suggest your past searches. Note: this also makes Zen remember what you type in web forms.|
+int|browser.urlbar.maxHistoricalSearchSuggestions|2|browser.formfill.enable|How many of your past searches should be suggested at most?||
+bool|zen.urlbar.hide-one-offs|true||Hide the row of search-engine buttons at the bottom of the dropdown?|Takes effect after restarting Zen.|
+bool|browser.urlbar.shortcuts.bookmarks|true|!zen.urlbar.hide-one-offs|Show a "search bookmarks" button in that row?||
+bool|browser.urlbar.shortcuts.tabs|true|!zen.urlbar.hide-one-offs|Show a "search tabs" button in that row?||
+bool|browser.urlbar.shortcuts.history|true|!zen.urlbar.hide-one-offs|Show a "search history" button in that row?||
+bool|browser.urlbar.shortcuts.workspaces|true|!zen.urlbar.hide-one-offs|Show a "search workspaces" button in that row?||
+bool|browser.fixup.dns_first_for_single_words|false||Treat a single word (like "router") as a local host name before searching for it?||
+int|browser.urlbar.dnsResolveSingleWordsAfterSearch|0||After you search a single word, check if it is also a local host and offer "Did you mean to go to ..."?||0=Never;1=Use heuristics;2=Always
+
+@section|Advanced|Performance and keyboard details.
+bool|browser.urlbar.speculativeConnect.enabled|true||Pre-connect to the likely destination while you type?|Faster loading, but Zen contacts the site before you press Enter.|
+bool|browser.urlbar.ctrlCanonizesURLs|true||Make Ctrl+Enter turn "example" into "www.example.com"?||
+int|browser.urlbar.delay|50||How long, in milliseconds, to wait after you stop typing before updating results?||
