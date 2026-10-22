@@ -5,7 +5,7 @@ URL bar can be personalised**: its look (colours, transparency, blur, fonts, siz
 behaviour (floating or not, which suggestions appear, how many results, how addresses are shown...),
 including the URL bar options that normally only exist in `about:config`.
 
-![The open URL bar with the default settings](docs/preview.png)
+![The open URL bar with the default settings](docs/preview.webp)
 
 It started as a fork of [Zen Cleaned URL Bar](https://github.com/dinnoyow/zen-cleaned-url-bar), which
 is no longer maintained, and builds on the fixes of
@@ -47,7 +47,7 @@ reused; this mod has its own.)
 
 | What | Command |
 |---|---|
-| Update the look to the latest version, only if it changed (keeps your settings) | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/update.sh \| bash` |
+| Update the look and the behaviour settings, only what changed (keeps your settings) | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/update.sh \| bash` |
 | Answer questions about the URL bar's behaviour | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/configure.sh \| bash` |
 | Show the current behaviour settings | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/configure.sh \| bash -s -- --list` |
 | Uninstall | `curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-extended/main/uninstall.sh \| bash` |
@@ -62,9 +62,17 @@ which would undo the changes. If Zen is open, the script asks you to close it an
 The scripts find profiles in these places: `~/.zen` and `~/.config/zen` (Linux),
 `~/.var/app/app.zen_browser.zen/` (Flatpak) and `~/Library/Application Support/zen` (macOS).
 
-`update.sh` only looks at the look of the URL bar, because that is the only part of this project that
-stays in Zen: it compares the installed `chrome.css` and `preferences.json` with the latest ones and
-replaces them only when they differ. When they are the same it changes nothing (and Zen may stay open).
+`update.sh` keeps both parts up to date:
+
+- **The look**: it compares the installed `chrome.css` and `preferences.json` with the latest ones and
+  replaces them only when they differ.
+- **The behaviour settings** that `configure.sh` saved: if Zen renamed one of those preferences, your
+  value is moved to the new name (a value you already saved under the new name is kept). If questions
+  were added since you last answered them, it lists them and offers to ask just those; without a
+  terminal it tells you to run `configure.sh`. (`configure.sh` itself is never stored: it is downloaded
+  fresh each time, so its questions are always the latest.)
+
+When there is nothing to do it changes nothing, and Zen may stay open.
 
 <details>
 <summary>Windows, or installing by hand</summary>
@@ -137,7 +145,9 @@ Only what Zen uses, all inside your Zen profile:
   URL bar and the list of its settings.
 - The mod's entry in `zen-themes.json` (Zen's list of installed mods).
 - Your settings, in Zen's `prefs.js`: the mod's own (`mod.cleanedurlbarext.*`) and any URL bar
-  preference you changed (those are normal Zen preferences).
+  preference you changed (those are normal Zen preferences). One of the mod's,
+  `mod.cleanedurlbarext.questions-seen`, is just a number: the latest set of behaviour questions you
+  were asked, so `update.sh` knows which ones are new.
 - `prefs.js.cleanedurlbarext.bak` and `zen-themes.json.cleanedurlbarext.bak`: a copy of those two files
   from before the last change a script made, in case you need to undo it. There is only ever one copy
   of each (every run replaces it), so they take about as much space as the files themselves: usually
@@ -154,63 +164,68 @@ preferences you changed, unless you pass `--reset-prefs`).
 
 ![The mod's settings in Zen](docs/settings.png)
 
-Every look option is in Zen's mod settings and applies instantly. Text fields that show
-**Zen default** keep Zen's own style while they are empty, so you only change what you want. Sizes and
-colours accept any CSS value (`12px`, `1.2em`, `#ff8800`, `rgb(...)`, `hsl(...)`, `light-dark(...)`).
+Every look option is in Zen's mod settings and applies instantly. A text field that shows
+**Zen default** keeps Zen's own style while it is empty, so you only change what you want.
 
-| Setting | Default |
-|---|---|
-| Panel · Background | Zen accent colour |
-| Panel · Background transparency (0% solid, 100% invisible) | `90%` |
-| Panel · Custom colour, dark theme (any CSS colour) | `hsl(0 0 10)` |
-| Panel · Custom colour, light theme (any CSS colour) | `hsl(0 0 90)` |
-| Panel · Background blur (e.g. 25px, 0px for none) | `25px` |
-| Panel · Corner radius (e.g. 15px) | `15px` |
-| Panel · Border (CSS border, e.g. 3px solid hsl(0 0 50 / 10%)) | `3px solid hsl(0 0 50 / 10%)` |
-| Panel · Remove the drop shadow | off |
-| Panel · Remove the line between the text field and the results | on |
-| Panel · Width when floating (e.g. 60%, 800px) | empty (Zen default) |
-| Panel · Distance from the top when floating (e.g. 20%, 150px) | empty (Zen default) |
-| Panel · Font family (e.g. Inter, monospace) | empty (Zen default) |
-| Panel · Typed text size (e.g. 18px) | empty (Zen default) |
-| Panel · Typed text colour | empty (Zen default) |
-| Results · Row corner radius (e.g. 11px) | `11px` |
-| Results · Fade the highlight in and out smoothly | on |
-| Results · Row height (e.g. 38px) | empty (Zen default) |
-| Results · List max height before scrolling (e.g. 400px, none) | empty (Zen default) |
-| Results · Text size (e.g. 13px) | empty (Zen default) |
-| Results · Title colour | empty (Zen default) |
-| Results · Address colour | empty (Zen default) |
-| Results · Hover background colour | empty (Zen default) |
-| Results · Dim addresses to make titles stand out | on |
-| Results · Hide addresses, show titles only | off |
-| Selected result · Background | Zen accent colour (softened) |
-| Selected result · Background transparency (0% solid, 100% invisible) | `70%` |
-| Selected result · Custom background colour | `hsl(0 0 80)` |
-| Selected result · Text colour | empty (Zen default) |
-| Selected result · Icon background | Subtle tint |
-| Resting bar · Background colour | empty (Zen default) |
-| Resting bar · Corner radius | empty (Zen default) |
-| Resting bar · Border (CSS border) | empty (Zen default) |
-| Resting bar · Font family | empty (Zen default) |
-| Resting bar · Text size | empty (Zen default) |
-| Resting bar · Text colour | empty (Zen default) |
-| Resting bar · Centre the address | off |
-| Icons · Hide the site information (lock) icon | off |
-| Icons · Hide Zen's site data / extensions button | off |
-| Icons · Hide granted-permission icons | off |
-| Icons · Show the reader view button (when available) | off |
-| Icons · Show the bookmark star | off |
-| Icons · Hide the zoom level indicator | off |
-| Icons · Hide the translations button | off |
-| Icons · Hide the split view button | off |
-| Icons · Hide the copy URL button | off |
-| Search buttons row · Rounded, borderless style | on |
+- **A CSS colour** can be written as hex (`#ff8800`), `rgb(255 136 0)`, `hsl(32 100% 50%)` or a name
+  (`orange`, `white`). For a see-through colour add the opacity: `rgb(255 136 0 / 50%)` or `#ff880080`.
+- **A size** is a number with a unit: `12px` (pixels) or `1.2em` (relative to the text size); some
+  options also take `%`, as noted.
+- A value that is not valid CSS does **not** fall back to Zen's style: that part resets to a plain
+  default instead (for example no border at all, or plain black or white text). If something looks
+  wrong, check the value, or empty the field to get Zen's style back.
+
+| Setting | What to enter | Default |
+|---|---|---|
+| Panel · Background | **Zen accent colour**, **Custom colours** (the two colour fields below) or **Zen default** (Zen's own background) | Zen accent colour |
+| Panel · Background transparency | A percentage: `0%` solid, `100%` invisible. Used with the accent and custom colours | `90%` |
+| Panel · Custom colour, dark theme | A CSS colour (see above), e.g. `#1a1a1a`. Used when Background is Custom and Zen's theme is dark | `hsl(0 0 10)` |
+| Panel · Custom colour, light theme | A CSS colour (see above), e.g. `#e6e6e6`. Used when Background is Custom and Zen's theme is light | `hsl(0 0 90)` |
+| Panel · Background blur | A size, e.g. `25px`. `0px` or empty = no blur | `25px` |
+| Panel · Corner radius | A size, e.g. `15px`. `0px` = square corners | `15px` |
+| Panel · Border | A CSS border: width, style and colour, e.g. `2px solid #808080` or `1px dashed rgb(255 255 255 / 30%)`. `none` = no border | `3px solid hsl(0 0 50 / 10%)` |
+| Panel · Remove the drop shadow | On or off | off |
+| Panel · Remove the line between the text field and the results | On or off | on |
+| Panel · Width when floating | A size: a percentage of the window, e.g. `60%`, or pixels, e.g. `800px`. Only while the bar floats | empty (Zen's style) |
+| Panel · Distance from the top when floating | A size: a percentage of the window height, e.g. `20%`, or pixels, e.g. `150px`. Only while the bar floats | empty (Zen's style) |
+| Panel · Font | The name of a font installed on your computer, e.g. `Inter` or `JetBrains Mono` (several, separated by commas, are tried in order: `JetBrains Mono, monospace`), or `sans-serif`, `serif`, `monospace` | empty (Zen's style) |
+| Panel · Typed text size | A size, e.g. `18px` or `1.2em` | empty (Zen's style) |
+| Panel · Typed text colour | A CSS colour (see above), e.g. `#ffffff` | empty (Zen's style) |
+| Results · Row corner radius | A size, e.g. `11px`. `0px` = square rows | `11px` |
+| Results · Fade the highlight in and out smoothly | On or off | on |
+| Results · Row height | A size, e.g. `38px`. Zen uses `45px`; smaller makes the list compact | empty (Zen's style) |
+| Results · List height before scrolling | A size, e.g. `400px`, or `none` for no limit. Zen uses `244px` (about five rows) | empty (Zen's style) |
+| Results · Text size | A size, e.g. `13px` or `0.9em`. Zen uses `14px` | empty (Zen's style) |
+| Results · Title colour | A CSS colour (see above) for the page titles of the rows that are not selected, e.g. `#e0e0e0` | empty (Zen's style) |
+| Results · Address colour | A CSS colour (see above) for the addresses of the rows that are not selected, e.g. `#9a9a9a` | empty (Zen's style) |
+| Results · Hover background | A CSS colour (see above) for the row under the mouse; a see-through one works best, e.g. `rgb(255 255 255 / 10%)` | empty (Zen's style) |
+| Results · Dim addresses to make titles stand out | On or off | on |
+| Results · Hide addresses, show titles only | On or off | off |
+| Selected result · Background | **Zen accent colour (softened)**, **Custom colour** (the field below) or **Zen default** | Zen accent colour (softened) |
+| Selected result · Background transparency | A percentage: `0%` solid, `100%` invisible | `70%` |
+| Selected result · Custom background colour | A CSS colour (see above), e.g. `#5050fa`. Used when Background is Custom | `hsl(0 0 80)` |
+| Selected result · Text colour | A CSS colour (see above) for the text of the selected row, e.g. `#ffffff`. Works with any background | empty (Zen's style) |
+| Selected result · Icon background | **Subtle tint**, **None** or **Zen default** (a white tile) | Subtle tint |
+| Resting bar · Background colour | A CSS colour (see above), e.g. `rgb(255 255 255 / 8%)` | empty (Zen's style) |
+| Resting bar · Corner radius | A size, e.g. `10px` | empty (Zen's style) |
+| Resting bar · Border | A CSS border, e.g. `1px solid #808080` | empty (Zen's style) |
+| Resting bar · Font | The name of an installed font, e.g. `Inter`, or `sans-serif`, `serif`, `monospace` | empty (Zen's style) |
+| Resting bar · Text size | A size, e.g. `14px` or `1em` | empty (Zen's style) |
+| Resting bar · Text colour | A CSS colour (see above), e.g. `#cccccc` | empty (Zen's style) |
+| Resting bar · Centre the address | On or off | off |
+| Icons · Hide the site information | On or off | off |
+| Icons · Hide Zen's site data / extensions button | On or off | off |
+| Icons · Hide granted-permission icons | On or off | off |
+| Icons · Show the reader view button | On or off | off |
+| Icons · Show the bookmark star | On or off | off |
+| Icons · Hide the zoom level indicator | On or off | off |
+| Icons · Hide the translations button | On or off | off |
+| Icons · Hide the split view button | On or off | off |
+| Icons · Hide the copy URL button | On or off | off |
+| Search buttons row · Rounded, borderless style | On or off. The row only shows when Zen's "hide the search-engine buttons row" is off | on |
 
 The panel is the URL bar while it is open (expanded in place or floating); the resting bar is the
 URL bar when it is not focused (in the sidebar or the top toolbar).
-
-![A custom red panel in dark mode](docs/preview-dark-custom.png)
 
 ### Behaviour: `configure.sh` or Zen's mod settings
 
@@ -323,12 +338,6 @@ Notes:
   turns off the services behind others (trending searches, weather, Firefox Suggest), so they are not
   offered here.
 
-### Handy URL bar shortcuts
-
-Start what you type with one of these characters and a space to search only one kind of result:
-`*` bookmarks, `%` open tabs, `^` history, `?` search engine, `>` quick actions, `` ` `` workspaces,
-`#` page titles, `$` addresses.
-
 ## How it works
 
 - Zen loads mods from `chrome/zen-themes/<id>/` inside your profile and lists them in
@@ -373,8 +382,10 @@ python3 tests/fuzz_json_awk.py       # the awk JSON helper against Python's json
 ```
 
 `lib/catalogue.txt` lists the behaviour questions; every on/off or choice preference there must also be
-in `preferences.json` (the consistency test checks it). Remember to raise `version` in `theme.json`
-for a release.
+in `preferences.json` (the consistency test checks it). A new question gets the next `since` revision,
+so `update.sh` offers it to existing users. When Zen renames a preference, keep the question under the
+new name and add `@renamed|<old>|<new>`, so saved values are moved. Remember to raise `version` in
+`theme.json` for a release.
 
 ## Credits
 
