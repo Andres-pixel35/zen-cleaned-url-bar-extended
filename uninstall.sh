@@ -94,7 +94,8 @@ main() {
     set_profile_paths
     if ! is_installed && [ -z "$reset" ]; then
         # Backups can remain from configure.sh, which works without the mod.
-        if [ -n "$(remove_backups)" ]; then
+        remove_backups
+        if [ "$REMOVED_BACKUPS" -gt 0 ]; then
             ok "$MOD_NAME is not installed in this profile; removed its leftover backups."
         else
             ok "$MOD_NAME is not installed in this profile; nothing to do."
@@ -140,7 +141,7 @@ main() {
         fi
     fi
     # Everything succeeded, so the backups are no longer needed.
-    remove_backups >/dev/null
+    remove_backups
 }
 
 main "$@"
