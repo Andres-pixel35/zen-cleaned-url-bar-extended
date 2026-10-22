@@ -18,42 +18,42 @@
     },
     {
         "property": "mod.cleanedurlbarext.panel.transparency",
-        "label": "Panel · Background transparency (0% solid, 100% invisible)",
+        "label": "Panel · Background transparency (0% solid to 100% invisible)",
         "type": "string",
         "placeholder": "0% (solid)",
         "defaultValue": "90%"
     },
     {
         "property": "mod.cleanedurlbarext.panel.darkcolor",
-        "label": "Panel · Custom colour, dark theme (any CSS colour)",
+        "label": "Panel · Custom colour, dark theme (CSS colour, e.g. #1a1a1a)",
         "type": "string",
         "placeholder": "hsl(0 0 10)",
         "defaultValue": "hsl(0 0 10)"
     },
     {
         "property": "mod.cleanedurlbarext.panel.lightcolor",
-        "label": "Panel · Custom colour, light theme (any CSS colour)",
+        "label": "Panel · Custom colour, light theme (CSS colour, e.g. #e6e6e6)",
         "type": "string",
         "placeholder": "hsl(0 0 90)",
         "defaultValue": "hsl(0 0 90)"
     },
     {
         "property": "mod.cleanedurlbarext.panel.blur",
-        "label": "Panel · Background blur (e.g. 25px, 0px for none)",
+        "label": "Panel · Background blur (size in px, e.g. 25px; 0px = none)",
         "type": "string",
         "placeholder": "No blur",
         "defaultValue": "25px"
     },
     {
         "property": "mod.cleanedurlbarext.panel.radius",
-        "label": "Panel · Corner radius (e.g. 15px)",
+        "label": "Panel · Corner radius (size in px, e.g. 15px; 0px = square)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": "15px"
     },
     {
         "property": "mod.cleanedurlbarext.panel.border",
-        "label": "Panel · Border (CSS border, e.g. 3px solid hsl(0 0 50 / 10%))",
+        "label": "Panel · Border (width style colour, e.g. 2px solid #808080; none)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": "3px solid hsl(0 0 50 / 10%)"
@@ -72,42 +72,42 @@
     },
     {
         "property": "mod.cleanedurlbarext.panel.width",
-        "label": "Panel · Width when floating (e.g. 60%, 800px)",
+        "label": "Panel · Width when floating (% of the window or px, e.g. 60%)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.panel.top",
-        "label": "Panel · Distance from the top when floating (e.g. 20%, 150px)",
+        "label": "Panel · Distance from the top when floating (% or px, e.g. 20%)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.panel.font",
-        "label": "Panel · Font family (e.g. Inter, monospace)",
+        "label": "Panel · Font (name of an installed font, e.g. Inter)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.panel.fontsize",
-        "label": "Panel · Typed text size (e.g. 18px)",
+        "label": "Panel · Typed text size (px or em, e.g. 18px)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.panel.textcolor",
-        "label": "Panel · Typed text colour",
+        "label": "Panel · Typed text colour (CSS colour, e.g. #ffffff)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.results.radius",
-        "label": "Results · Row corner radius (e.g. 11px)",
+        "label": "Results · Row corner radius (size in px, e.g. 11px)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": "11px"
@@ -120,42 +120,42 @@
     },
     {
         "property": "mod.cleanedurlbarext.results.rowheight",
-        "label": "Results · Row height (e.g. 38px)",
+        "label": "Results · Row height (size in px, e.g. 38px; Zen uses 45px)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.results.maxheight",
-        "label": "Results · List max height before scrolling (e.g. 400px, none)",
+        "label": "Results · List height before scrolling (px or none, e.g. 400px)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.results.fontsize",
-        "label": "Results · Text size (e.g. 13px)",
+        "label": "Results · Text size (px or em, e.g. 13px; Zen uses 14px)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.results.textcolor",
-        "label": "Results · Title colour",
+        "label": "Results · Title colour (CSS colour, e.g. #e0e0e0)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.results.urlcolor",
-        "label": "Results · Address colour",
+        "label": "Results · Address colour (CSS colour, e.g. #9a9a9a)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.results.hovercolor",
-        "label": "Results · Hover background colour",
+        "label": "Results · Hover background (CSS colour, e.g. rgb(255 255 255 / 10%))",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
@@ -191,21 +191,21 @@
     },
     {
         "property": "mod.cleanedurlbarext.selected.transparency",
-        "label": "Selected result · Background transparency (0% solid, 100% invisible)",
+        "label": "Selected result · Background transparency (0% solid to 100% invisible)",
         "type": "string",
         "placeholder": "0% (solid)",
         "defaultValue": "70%"
     },
     {
         "property": "mod.cleanedurlbarext.selected.color",
-        "label": "Selected result · Custom background colour",
+        "label": "Selected result · Custom background colour (CSS colour, e.g. #5050fa)",
         "type": "string",
         "placeholder": "hsl(0 0 80)",
         "defaultValue": "hsl(0 0 80)"
     },
     {
         "property": "mod.cleanedurlbarext.selected.textcolor",
-        "label": "Selected result · Text colour",
+        "label": "Selected result · Text colour (CSS colour, e.g. #ffffff)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
@@ -229,42 +229,42 @@
     },
     {
         "property": "mod.cleanedurlbarext.bar.background",
-        "label": "Resting bar · Background colour",
+        "label": "Resting bar · Background colour (CSS colour, e.g. rgb(255 255 255 / 8%))",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.bar.radius",
-        "label": "Resting bar · Corner radius",
+        "label": "Resting bar · Corner radius (size in px, e.g. 10px)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.bar.border",
-        "label": "Resting bar · Border (CSS border)",
+        "label": "Resting bar · Border (width style colour, e.g. 1px solid #808080)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.bar.font",
-        "label": "Resting bar · Font family",
+        "label": "Resting bar · Font (name of an installed font, e.g. Inter)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.bar.fontsize",
-        "label": "Resting bar · Text size",
+        "label": "Resting bar · Text size (px or em, e.g. 14px)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""
     },
     {
         "property": "mod.cleanedurlbarext.bar.textcolor",
-        "label": "Resting bar · Text colour",
+        "label": "Resting bar · Text colour (CSS colour, e.g. #cccccc)",
         "type": "string",
         "placeholder": "Zen default",
         "defaultValue": ""

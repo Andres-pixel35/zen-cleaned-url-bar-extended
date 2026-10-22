@@ -49,9 +49,14 @@ usage() {
     cat <<'EOF'
 Usage: update.sh [options]
 
-Updates the look of the URL bar (the mod's chrome.css and preferences.json) to
-the latest version when it changed, keeping your settings. Nothing is touched
-when it is already up to date. Zen must be closed when there is an update.
+Updates what this project keeps in your Zen profile, keeping your settings:
+- the look of the URL bar (the mod's chrome.css and preferences.json), when it
+  changed;
+- behaviour settings saved under a name Zen has since renamed, which are moved
+  to the new name;
+- and it offers the behaviour questions added since you last answered them.
+Nothing is touched when everything is up to date. Zen must be closed when
+something is written.
 
 Options:
   -p, --profile PATH  Zen profile folder (about:support > Profile Directory), or
@@ -88,22 +93,64 @@ main() {
     set_profile_paths
     is_installed || die "$MOD_NAME is not installed in this profile. Use install.sh instead."
 
-    local previous version
+    local previous version look="" renames i seen new_questions="" new_count=0
     previous=$(installed_version)
     version=$(json_version "$ROOT_DIR/theme.json")
-    if mod_up_to_date; then
+    load_catalogue
+    mod_up_to_date || look=1
+    renames=$(pending_renames)
+    seen=$(questions_seen)
+    for ((i = 0; i < ${#CAT_PREF[@]}; i++)); do
+        if [ "${CAT_SINCE[$i]}" -gt "$seen" ]; then
+            new_questions="$new_questions $i"
+            new_count=$((new_count + 1))
+        fi
+    done
+    if [ -z "$look$renames" ] && [ "$new_count" -eq 0 ]; then
         ok "$MOD_NAME is already up to date ($version); nothing was changed."
         return 0
     fi
-    require_zen_closed
-    install_mod_files
-    prefs_apply
-    if [ "$previous" = "$version" ]; then
-        ok "Updated the files of $MOD_NAME $version. Your settings were kept."
+
+    if [ -n "$look$renames" ]; then
+        require_zen_closed
+        if [ -n "$look" ]; then
+            install_mod_files
+        fi
+        migrate_renamed_prefs
+        prefs_apply
+        if [ -z "$look" ]; then
+            ok "The look of $MOD_NAME is already up to date ($version)."
+        elif [ "$previous" = "$version" ]; then
+            ok "Updated the files of $MOD_NAME $version. Your settings were kept."
+        else
+            ok "Updated $MOD_NAME ${previous:-?} -> $version. Your settings were kept."
+        fi
+        if [ ${#MIGRATED[@]} -gt 0 ]; then
+            ok "Moved settings that Zen renamed:"
+            printf '    %s\n' "${MIGRATED[@]}"
+        fi
     else
-        ok "Updated $MOD_NAME ${previous:-?} -> $version. Your settings were kept."
+        ok "The look of $MOD_NAME is already up to date ($version)."
     fi
-    say "    Start Zen: the update is applied a moment after startup."
+
+    if [ "$new_count" -gt 0 ]; then
+        say ""
+        say "$new_count new URL bar behaviour question(s) since you last answered them:"
+        for i in $new_questions; do
+            say "  - ${CAT_QUESTION[$i]}"
+        done
+        if open_tty && ask_yes_no "Answer them now?" y; then
+            require_zen_closed
+            # shellcheck source=lib/configure.sh
+            . "$LIB_DIR/configure.sh"
+            cfg_load_state
+            cfg_run_questions "$new_questions"
+        else
+            say "They will be offered again at the next update, or run configure.sh to answer them."
+        fi
+    fi
+    [ -n "$look" ] && say "    Start Zen: the update is applied a moment after startup."
+    return 0
 }
 
 main "$@"

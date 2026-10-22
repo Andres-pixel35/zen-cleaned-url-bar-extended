@@ -34,6 +34,7 @@ common = read("lib/common.sh")
 
 # --- catalogue -------------------------------------------------------------
 catalogue = {}
+renamed = []
 sections = 0
 for n, line in enumerate(read("lib/catalogue.txt").splitlines(), 1):
     if not line or line.startswith("#"):
@@ -44,10 +45,18 @@ for n, line in enumerate(read("lib/catalogue.txt").splitlines(), 1):
         if len(fields) != 3:
             error(f"catalogue line {n}: a section needs 3 fields")
         continue
-    if len(fields) != 7:
-        error(f"catalogue line {n}: expected 7 fields, got {len(fields)}")
+    if fields[0] == "@renamed":
+        if len(fields) != 3 or not fields[1] or not fields[2] or fields[1] == fields[2]:
+            error(f"catalogue line {n}: @renamed needs an old and a different new name")
+        else:
+            renamed.append((n, fields[1], fields[2]))
         continue
-    kind, pref, default, dep, question, help_, choices = fields
+    if len(fields) != 8:
+        error(f"catalogue line {n}: expected 8 fields, got {len(fields)}")
+        continue
+    kind, pref, default, dep, question, help_, choices, since = fields
+    if not re.fullmatch(r"[1-9]\d*", since):
+        error(f"catalogue: {pref} 'since' must be a revision number (1, 2, ...)")
     if kind not in ("bool", "int", "choice"):
         error(f"catalogue line {n}: unknown kind {kind}")
     if pref in catalogue:
@@ -72,6 +81,16 @@ for pref, c in catalogue.items():
         error(f"catalogue: {pref} depends on unknown {dep}")
     elif dep and catalogue[dep]["kind"] != "bool":
         error(f"catalogue: {pref} depends on non-bool {dep}")
+olds = [o for _, o, _ in renamed]
+for n, old, new in renamed:
+    if old in catalogue:
+        error(f"catalogue line {n}: renamed-away {old} is still asked")
+    if new not in catalogue and not new.startswith("mod.cleanedurlbarext."):
+        error(f"catalogue line {n}: {new} is neither a question nor a mod option")
+    if new in olds:
+        error(f"catalogue line {n}: {new} is renamed again; point old names at the latest name")
+    if olds.count(old) > 1:
+        error(f"catalogue line {n}: {old} renamed twice")
 
 # --- preferences.json ------------------------------------------------------
 seen = set()

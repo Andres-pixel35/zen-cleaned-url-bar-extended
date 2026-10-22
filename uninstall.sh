@@ -92,8 +92,11 @@ main() {
 
     select_profile "$profile_arg"
     set_profile_paths
-    if ! is_installed && [ -z "$reset" ]; then
-        # Backups can remain from configure.sh, which works without the mod.
+    local installed="" leftovers=""
+    is_installed && installed=1
+    # Settings can remain without the mod: configure.sh works on its own.
+    [ -f "$PREFS_JS" ] && grep -qF "user_pref(\"$MOD_PREF_PREFIX" "$PREFS_JS" && leftovers=1
+    if [ -z "$installed$leftovers$reset" ]; then
         remove_backups
         if [ "$REMOVED_BACKUPS" -gt 0 ]; then
             ok "$MOD_NAME is not installed in this profile; removed its leftover backups."
@@ -110,28 +113,35 @@ main() {
     fi
     require_zen_closed
 
-    rm -rf "$MOD_DIR" || die "Cannot remove $MOD_DIR."
-    if [ -f "$THEMES_JSON" ] && json get "$THEMES_JSON" "$MOD_ID" >/dev/null 2>&1; then
-        json del "$THEMES_JSON" "$MOD_ID" >"$WORK_DIR/zen-themes.json" || die "Could not update $THEMES_JSON."
-        backup_once "$THEMES_JSON"
-        replace_file "$THEMES_JSON" "$WORK_DIR/zen-themes.json"
+    if [ -n "$installed" ]; then
+        rm -rf "$MOD_DIR" || die "Cannot remove $MOD_DIR."
+        if [ -f "$THEMES_JSON" ] && json get "$THEMES_JSON" "$MOD_ID" >/dev/null 2>&1; then
+            json del "$THEMES_JSON" "$MOD_ID" >"$WORK_DIR/zen-themes.json" || die "Could not update $THEMES_JSON."
+            backup_once "$THEMES_JSON"
+            replace_file "$THEMES_JSON" "$WORK_DIR/zen-themes.json"
+        fi
+        request_mods_rebuild
     fi
     pref_unset_prefix "$MOD_PREF_PREFIX"
-    request_mods_rebuild
 
-    local i reset_list=()
+    local pref reset_list=()
     if [ -n "$reset" ]; then
         load_catalogue
-        for ((i = 0; i < ${#CAT_PREF[@]}; i++)); do
-            if [ -n "$(pref_get "$PREFS_JS" "${CAT_PREF[$i]}")" ]; then
-                pref_unset "${CAT_PREF[$i]}"
-                reset_list+=("${CAT_PREF[$i]}")
+        # Old names too: a value may still be saved under a name Zen renamed.
+        for pref in "${CAT_PREF[@]}" ${RENAMED_OLD[@]+"${RENAMED_OLD[@]}"}; do
+            if [ -n "$(pref_get "$PREFS_JS" "$pref")" ]; then
+                pref_unset "$pref"
+                reset_list+=("$pref")
             fi
         done
     fi
     prefs_apply
 
-    ok "Removed $MOD_NAME."
+    if [ -n "$installed" ]; then
+        ok "Removed $MOD_NAME."
+    elif [ -n "$leftovers" ]; then
+        ok "Removed the settings $MOD_NAME left in this profile."
+    fi
     if [ -n "$reset" ]; then
         if [ ${#reset_list[@]} -gt 0 ]; then
             ok "Reset to Zen's defaults:"
