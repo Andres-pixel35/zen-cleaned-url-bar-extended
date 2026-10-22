@@ -1,67 +1,356 @@
+/* Cleaned URL Bar Extended
+ *
+ * How the options in Zen Settings > Mods reach this file:
+ * - Checkbox and dropdown options are read with `@media -moz-pref("pref")` and
+ *   `@media -moz-pref("pref", "value")`, which Zen re-evaluates live.
+ * - Text options become CSS variables on :root (the pref name with dots turned
+ *   into dashes) and are only applied inside `@media -moz-pref("pref")`, which
+ *   matches when the text is not empty. An empty text option therefore leaves
+ *   Zen's own style untouched.
+ * - Zen loads mods as a user-origin stylesheet, so `!important` here wins over
+ *   Zen's own `!important` rules whatever their selector specificity.
+ */
+
 @-moz-document url-prefix("chrome:") {
-  /* Blurs the background */
-  #urlbar[breakout-extend="true"] #urlbar-background {
-    border-radius: 15px !important;
-    border: solid 3px color-mix(in hsl, hsl(0 0 50), transparent 90%) !important;
-  }
 
-  #urlbar[breakout-extend="true"] #urlbar-background {
-    backdrop-filter: blur(25px) !important;
-  }
-  
-  @media (prefers-color-scheme: dark) {
-    #urlbar[breakout-extend="true"] #urlbar-background {
-      background-color: color-mix(
-        in hsl,
-        var(--mod-cleanedurlbar-customdarkcolor),
-        transparent var(--mod-cleanedurlbar-customtransparency)
-      ) !important;
+  /* ===== Panel: the URL bar while it is open (expanded in place or floating) ===== */
+
+  /* Firefox 150+ (Zen 1.19.9b+) removed the stacking context from #browser, so
+     backdrop-filter on the URL bar no longer sees the page behind it. A no-op
+     backdrop-filter on #browser restores it. Only added while a blur is set, so
+     that extra stacking context does not exist otherwise. */
+  @media -moz-pref("mod.cleanedurlbarext.panel.blur") {
+    #browser {
+      backdrop-filter: blur(0) !important;
+    }
+
+    #urlbar[breakout-extend] .urlbar-background {
+      backdrop-filter: blur(var(--mod-cleanedurlbarext-panel-blur)) !important;
     }
   }
 
-  @media (prefers-color-scheme: light) {
-    #urlbar[breakout-extend="true"] #urlbar-background {
-      background-color: color-mix(
-        in hsl,
-        var(--mod-cleanedurlbar-customlightcolor),
-        transparent var(--mod-cleanedurlbar-customtransparency)
-      ) !important;
+  @media -moz-pref("mod.cleanedurlbarext.panel.background", "accent") {
+    #urlbar[breakout-extend] .urlbar-background {
+      background-color: color-mix(in srgb,
+          var(--zen-primary-color),
+          transparent var(--mod-cleanedurlbarext-panel-transparency, 0%)) !important;
     }
   }
 
-  /* Custom URL result selected color */
-  .urlbarView-row {
-    &[selected] {
-      background-color: var(--mod-cleanedurlbar-customselectcolor) !important;
-      color: var(--mod-cleanedurlbar-customselectfontcolor) !important;
+  @media -moz-pref("mod.cleanedurlbarext.panel.background", "custom") {
+    #urlbar[breakout-extend] .urlbar-background {
+      background-color: color-mix(in srgb,
+          light-dark(var(--mod-cleanedurlbarext-panel-lightcolor, hsl(0 0 90)),
+                     var(--mod-cleanedurlbarext-panel-darkcolor, hsl(0 0 10))),
+          transparent var(--mod-cleanedurlbarext-panel-transparency, 0%)) !important;
     }
   }
 
-  /* Unifies the border radius */
-  .urlbarView-row {
-    border-radius: 11px !important;
+  @media -moz-pref("mod.cleanedurlbarext.panel.radius") {
+    #urlbar[breakout-extend],
+    #urlbar[breakout-extend] .urlbar-background {
+      border-radius: var(--mod-cleanedurlbarext-panel-radius) !important;
+    }
   }
 
-  /* Deletes the border */
-  .urlbarView-body-inner {
-    border: none !important;
+  /* Zen draws a thin outline around the open URL bar; a custom border replaces it. */
+  @media -moz-pref("mod.cleanedurlbarext.panel.border") {
+    #urlbar[breakout-extend] .urlbar-background {
+      border: var(--mod-cleanedurlbarext-panel-border) !important;
+      outline: none !important;
+    }
   }
 
-  /* Styles the search options */
-  .search-one-offs {
-    border-top: none !important;
-    border-radius: 10px !important;
-    padding: 4px !important;
-    margin: 0px 0px 7px 0px !important;
-    backdrop-filter: brightness(130%);
+  @media -moz-pref("mod.cleanedurlbarext.panel.noshadow") {
+    #urlbar[breakout-extend] .urlbar-background {
+      box-shadow: none !important;
+    }
   }
 
-  .searchbar-engine-one-off-item {
-    border-radius: 8px !important;
-    margin-right: 3px !important;
+  /* The line between the text field and the results. The original mod removed it
+     through `.urlbarView-body-inner`, an element Firefox no longer has. */
+  @media -moz-pref("mod.cleanedurlbarext.panel.hideseparator") {
+    #urlbar .urlbarView-results {
+      border-top: none !important;
+    }
   }
 
-  #urlbar-anon-search-settings {
-    margin-right: 0px !important;
+  @media -moz-pref("mod.cleanedurlbarext.panel.width") {
+    #urlbar[open][zen-floating-urlbar="true"] {
+      width: var(--mod-cleanedurlbarext-panel-width) !important;
+      min-width: 0 !important;
+      max-width: 100% !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.panel.top") {
+    #urlbar[open][zen-floating-urlbar="true"] {
+      top: var(--mod-cleanedurlbarext-panel-top) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.panel.font") {
+    #urlbar[breakout-extend],
+    #urlbar[breakout-extend] .urlbar-input {
+      font-family: var(--mod-cleanedurlbarext-panel-font) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.panel.fontsize") {
+    #urlbar[breakout-extend] .urlbar-input {
+      font-size: var(--mod-cleanedurlbarext-panel-fontsize) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.panel.textcolor") {
+    #urlbar[breakout-extend] .urlbar-input {
+      color: var(--mod-cleanedurlbarext-panel-textcolor) !important;
+    }
+  }
+
+  /* ===== Results ===== */
+
+  @media -moz-pref("mod.cleanedurlbarext.results.radius") {
+    .urlbarView-row {
+      border-radius: var(--mod-cleanedurlbarext-results-radius) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.results.transition") {
+    .urlbarView-row {
+      transition: background-color 0.2s ease !important;
+    }
+  }
+
+  /* Rows centre their content, so dropping Zen's 10px vertical padding lets the
+     height go below Zen's 45px as well as above it. */
+  @media -moz-pref("mod.cleanedurlbarext.results.rowheight") {
+    .urlbarView-row:not([type="tip"], [type="dynamic"]) {
+      --urlbarview-row-padding-block: 0px !important;
+      min-height: var(--mod-cleanedurlbarext-results-rowheight) !important;
+    }
+  }
+
+  /* Zen caps the list at 244px (about five rows) and scrolls the rest. */
+  @media -moz-pref("mod.cleanedurlbarext.results.maxheight") {
+    #urlbar-results {
+      max-height: var(--mod-cleanedurlbarext-results-maxheight) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.results.fontsize") {
+    .urlbarView-title,
+    .urlbarView-url,
+    .urlbarView-title-separator::before {
+      font-size: var(--mod-cleanedurlbarext-results-fontsize) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.results.textcolor") {
+    .urlbarView-row:not([selected]) {
+      color: var(--mod-cleanedurlbarext-results-textcolor) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.results.urlcolor") {
+    .urlbarView-row:not([selected]) .urlbarView-url,
+    .urlbarView-row:not([selected]) .urlbarView-title-separator::before {
+      color: var(--mod-cleanedurlbarext-results-urlcolor) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.results.hovercolor") {
+    .urlbarView-row:not([selected]):hover {
+      background-color: var(--mod-cleanedurlbarext-results-hovercolor) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.results.dimurls") {
+    .urlbarView-url {
+      opacity: 0.5 !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.results.hideurls") {
+    .urlbarView-row[has-url] .urlbarView-url,
+    .urlbarView-row[has-url] .urlbarView-title-separator {
+      display: none !important;
+    }
+  }
+
+  /* ===== Selected result ===== */
+
+  /* Same mix Zen uses for its search-mode badge, so it follows the accent colour. */
+  @media -moz-pref("mod.cleanedurlbarext.selected.background", "accent") {
+    .urlbarView-row[selected] {
+      background-color: color-mix(in srgb,
+          color-mix(in srgb, var(--zen-primary-color) 50%, light-dark(rgba(0, 0, 0, 0.5), rgba(255, 255, 255, 0.2)) 50%),
+          transparent var(--mod-cleanedurlbarext-selected-transparency, 0%)) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.selected.background", "custom") {
+    .urlbarView-row[selected] {
+      background-color: color-mix(in srgb,
+          var(--mod-cleanedurlbarext-selected-color, hsl(0 0 80)),
+          transparent var(--mod-cleanedurlbarext-selected-transparency, 0%)) !important;
+    }
+  }
+
+  /* Zen colours every element of the selected row (`[selected] *`), so the
+     children have to be targeted directly. */
+  @media -moz-pref("mod.cleanedurlbarext.selected.textcolor") {
+    .urlbarView-row[selected],
+    .urlbarView-row[selected] *,
+    .urlbarView-row[selected] .urlbarView-title-separator::before {
+      color: var(--mod-cleanedurlbarext-selected-textcolor) !important;
+    }
+  }
+
+  /* Zen gives the selected favicon a white tile and paints monochrome icons with a
+     dark colour meant for that tile; without the tile they follow the text colour. */
+  @media -moz-pref("mod.cleanedurlbarext.selected.favicon", "subtle") {
+    .urlbarView-row[selected] .urlbarView-favicon {
+      background-color: color-mix(in srgb, var(--zen-branding-bg-reverse) 5%, transparent 95%) !important;
+      fill: currentColor !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.selected.favicon", "transparent") {
+    .urlbarView-row[selected] .urlbarView-favicon {
+      background-color: transparent !important;
+      fill: currentColor !important;
+    }
+  }
+
+  /* ===== Resting URL bar (not focused, in the sidebar or toolbar) ===== */
+
+  @media -moz-pref("mod.cleanedurlbarext.bar.background") {
+    #urlbar:not([breakout-extend]) .urlbar-background {
+      background-color: var(--mod-cleanedurlbarext-bar-background) !important;
+    }
+
+    /* Keep a hover feedback, as Zen does with its own background. */
+    #urlbar:not([breakout-extend]):hover .urlbar-background {
+      background-color: color-mix(in srgb,
+          var(--mod-cleanedurlbarext-bar-background),
+          light-dark(black, white) 8%) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.bar.radius") {
+    #urlbar:not([breakout-extend]),
+    #urlbar:not([breakout-extend]) .urlbar-background {
+      border-radius: var(--mod-cleanedurlbarext-bar-radius) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.bar.border") {
+    #urlbar:not([breakout-extend]) .urlbar-background {
+      border: var(--mod-cleanedurlbarext-bar-border) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.bar.font") {
+    #urlbar:not([breakout-extend]) .urlbar-input {
+      font-family: var(--mod-cleanedurlbarext-bar-font) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.bar.fontsize") {
+    #urlbar:not([breakout-extend]) .urlbar-input {
+      font-size: var(--mod-cleanedurlbarext-bar-fontsize) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.bar.textcolor") {
+    #urlbar:not([breakout-extend]) .urlbar-input {
+      color: var(--mod-cleanedurlbarext-bar-textcolor) !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.bar.center") {
+    #urlbar:not([breakout-extend]) .urlbar-input {
+      text-align: center !important;
+    }
+  }
+
+  /* ===== Icons and buttons inside the URL bar ===== */
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.hideidentity") {
+    #identity-icon-box {
+      display: none !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.hidesitedata") {
+    #zen-site-data-icon-button {
+      display: none !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.hidepermissions") {
+    #identity-permission-box {
+      display: none !important;
+    }
+  }
+
+  /* Zen hides these three for good. `:not([hidden])` keeps them hidden while
+     Firefox has nothing to show (for example no reader view for the page). */
+  @media -moz-pref("mod.cleanedurlbarext.icons.showreader") {
+    #reader-mode-button:not([hidden]) {
+      display: flex !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.showstar") {
+    #star-button-box:not([hidden]) {
+      display: flex !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.hidezoom") {
+    #urlbar-zoom-button {
+      display: none !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.hidetranslations") {
+    #translations-button {
+      display: none !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.hidesplitview") {
+    #split-view-button {
+      display: none !important;
+    }
+  }
+
+  @media -moz-pref("mod.cleanedurlbarext.icons.hidecopyurl") {
+    #zen-copy-url-button {
+      display: none !important;
+    }
+  }
+
+  /* ===== Search-engine buttons row (shown when Zen's "hide one-offs" is off) ===== */
+
+  @media -moz-pref("mod.cleanedurlbarext.oneoffs.style") {
+    #urlbar .search-one-offs {
+      border-top: none !important;
+      border-radius: 10px !important;
+      padding: 4px !important;
+      margin: 0 0 7px !important;
+      backdrop-filter: brightness(130%) !important;
+    }
+
+    #urlbar .searchbar-engine-one-off-item {
+      border-radius: 8px !important;
+      margin-inline-end: 3px !important;
+    }
+
+    #urlbar .search-setting-button {
+      margin-inline-end: 0 !important;
+    }
   }
 }

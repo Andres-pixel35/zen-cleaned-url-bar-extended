@@ -1,32 +1,618 @@
 [
     {
-        "property": "mod.cleanedurlbar.customdarkcolor",
-        "label": "Cleaned URL Bar Color (HSL only) [Dark Mode]",
+        "property": "mod.cleanedurlbarext.panel.background",
+        "label": "Panel · Background",
+        "type": "dropdown",
+        "placeholder": "Zen default",
+        "defaultValue": "accent",
+        "options": [
+            {
+                "label": "Zen accent colour",
+                "value": "accent"
+            },
+            {
+                "label": "Custom colours (below)",
+                "value": "custom"
+            }
+        ]
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.transparency",
+        "label": "Panel · Background transparency (0% solid, 100% invisible)",
         "type": "string",
+        "placeholder": "0% (solid)",
+        "defaultValue": "90%"
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.darkcolor",
+        "label": "Panel · Custom colour, dark theme (any CSS colour)",
+        "type": "string",
+        "placeholder": "hsl(0 0 10)",
         "defaultValue": "hsl(0 0 10)"
     },
     {
-        "property": "mod.cleanedurlbar.customlightcolor",
-        "label": "Cleaned URL Bar Color (HSL only) [Light Mode]",
+        "property": "mod.cleanedurlbarext.panel.lightcolor",
+        "label": "Panel · Custom colour, light theme (any CSS colour)",
         "type": "string",
+        "placeholder": "hsl(0 0 90)",
         "defaultValue": "hsl(0 0 90)"
     },
     {
-        "property": "mod.cleanedurlbar.customtransparency",
-        "label": "Transparency (In percentage ex. 100%)",
+        "property": "mod.cleanedurlbarext.panel.blur",
+        "label": "Panel · Background blur (e.g. 25px, 0px for none)",
         "type": "string",
-        "defaultValue": "40%"
+        "placeholder": "No blur",
+        "defaultValue": "25px"
     },
     {
-        "property": "mod.cleanedurlbar.customselectcolor",
-        "label": "Selected URL color (rgb, hsl, hex)",
+        "property": "mod.cleanedurlbarext.panel.radius",
+        "label": "Panel · Corner radius (e.g. 15px)",
         "type": "string",
-        "defaultValue": "rgba(80, 80, 250, 0.75)"
+        "placeholder": "Zen default",
+        "defaultValue": "15px"
     },
     {
-        "property": "mod.cleanedurlbar.customselectfontcolor",
-        "label": "Selected URL font color (rgb, hsl, hex)",
+        "property": "mod.cleanedurlbarext.panel.border",
+        "label": "Panel · Border (CSS border, e.g. 3px solid hsl(0 0 50 / 10%))",
         "type": "string",
-        "defaultValue": "rgba(255,255,255,1)"
+        "placeholder": "Zen default",
+        "defaultValue": "3px solid hsl(0 0 50 / 10%)"
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.noshadow",
+        "label": "Panel · Remove the drop shadow",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.hideseparator",
+        "label": "Panel · Remove the line between the text field and the results",
+        "type": "checkbox",
+        "defaultValue": true
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.width",
+        "label": "Panel · Width when floating (e.g. 60%, 800px)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.top",
+        "label": "Panel · Distance from the top when floating (e.g. 20%, 150px)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.font",
+        "label": "Panel · Font family (e.g. Inter, monospace)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.fontsize",
+        "label": "Panel · Typed text size (e.g. 18px)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.panel.textcolor",
+        "label": "Panel · Typed text colour",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.radius",
+        "label": "Results · Row corner radius (e.g. 11px)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": "11px"
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.transition",
+        "label": "Results · Fade the highlight in and out smoothly",
+        "type": "checkbox",
+        "defaultValue": true
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.rowheight",
+        "label": "Results · Row height (e.g. 38px)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.maxheight",
+        "label": "Results · List max height before scrolling (e.g. 400px, none)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.fontsize",
+        "label": "Results · Text size (e.g. 13px)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.textcolor",
+        "label": "Results · Title colour",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.urlcolor",
+        "label": "Results · Address colour",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.hovercolor",
+        "label": "Results · Hover background colour",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.dimurls",
+        "label": "Results · Dim addresses to make titles stand out",
+        "type": "checkbox",
+        "defaultValue": true
+    },
+    {
+        "property": "mod.cleanedurlbarext.results.hideurls",
+        "label": "Results · Hide addresses, show titles only",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.selected.background",
+        "label": "Selected result · Background",
+        "type": "dropdown",
+        "placeholder": "Zen default",
+        "defaultValue": "accent",
+        "options": [
+            {
+                "label": "Zen accent colour (softened)",
+                "value": "accent"
+            },
+            {
+                "label": "Custom colour (below)",
+                "value": "custom"
+            }
+        ]
+    },
+    {
+        "property": "mod.cleanedurlbarext.selected.transparency",
+        "label": "Selected result · Background transparency (0% solid, 100% invisible)",
+        "type": "string",
+        "placeholder": "0% (solid)",
+        "defaultValue": "70%"
+    },
+    {
+        "property": "mod.cleanedurlbarext.selected.color",
+        "label": "Selected result · Custom background colour",
+        "type": "string",
+        "placeholder": "hsl(0 0 80)",
+        "defaultValue": "hsl(0 0 80)"
+    },
+    {
+        "property": "mod.cleanedurlbarext.selected.textcolor",
+        "label": "Selected result · Text colour",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.selected.favicon",
+        "label": "Selected result · Icon background",
+        "type": "dropdown",
+        "placeholder": "Zen default (white)",
+        "defaultValue": "subtle",
+        "options": [
+            {
+                "label": "Subtle tint",
+                "value": "subtle"
+            },
+            {
+                "label": "None",
+                "value": "transparent"
+            }
+        ]
+    },
+    {
+        "property": "mod.cleanedurlbarext.bar.background",
+        "label": "Resting bar · Background colour",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.bar.radius",
+        "label": "Resting bar · Corner radius",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.bar.border",
+        "label": "Resting bar · Border (CSS border)",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.bar.font",
+        "label": "Resting bar · Font family",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.bar.fontsize",
+        "label": "Resting bar · Text size",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.bar.textcolor",
+        "label": "Resting bar · Text colour",
+        "type": "string",
+        "placeholder": "Zen default",
+        "defaultValue": ""
+    },
+    {
+        "property": "mod.cleanedurlbarext.bar.center",
+        "label": "Resting bar · Centre the address",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.hideidentity",
+        "label": "Icons · Hide the site information (lock) icon",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.hidesitedata",
+        "label": "Icons · Hide Zen's site data / extensions button",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.hidepermissions",
+        "label": "Icons · Hide granted-permission icons",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.showreader",
+        "label": "Icons · Show the reader view button (when available)",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.showstar",
+        "label": "Icons · Show the bookmark star",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.hidezoom",
+        "label": "Icons · Hide the zoom level indicator",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.hidetranslations",
+        "label": "Icons · Hide the translations button",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.hidesplitview",
+        "label": "Icons · Hide the split view button",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.icons.hidecopyurl",
+        "label": "Icons · Hide the copy URL button",
+        "type": "checkbox",
+        "defaultValue": false
+    },
+    {
+        "property": "mod.cleanedurlbarext.oneoffs.style",
+        "label": "Search buttons row · Rounded, borderless style",
+        "type": "checkbox",
+        "defaultValue": true
+    },
+    {
+        "property": "zen.urlbar.behavior",
+        "label": "Behaviour · How the URL bar opens",
+        "type": "dropdown",
+        "placeholder": "Not set (acts like Normal)",
+        "options": [
+            {
+                "label": "Normal: expand in place",
+                "value": "normal"
+            },
+            {
+                "label": "Float when opened from the keyboard",
+                "value": "floating-on-type"
+            },
+            {
+                "label": "Always float",
+                "value": "float"
+            }
+        ]
+    },
+    {
+        "property": "zen.urlbar.replace-newtab",
+        "label": "Behaviour · Open the URL bar instead of a blank new tab",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.open-on-startup",
+        "label": "Behaviour · Open the URL bar when Zen starts on an empty tab",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.openintab",
+        "label": "Behaviour · Open results in a new tab",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.switchTabs.adoptIntoActiveWindow",
+        "label": "Behaviour · \"Switch to tab\" moves tabs from other windows here",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.enable-overrides",
+        "label": "Behaviour · Shift/Alt/Ctrl change what the selected result does",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.closeOnWindowBlur",
+        "label": "Behaviour · Close the dropdown when the window loses focus",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.focusContentDocumentOnEsc",
+        "label": "Behaviour · Esc in an empty URL bar focuses the page",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.show-domain-only-in-sidebar",
+        "label": "Address · Show only the domain (single-toolbar layout)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.trimURLs",
+        "label": "Address · Hide http:// and trailing slashes",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.trimHttps",
+        "label": "Address · Also hide https://",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.trimWww",
+        "label": "Address · Hide a leading www.",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.untrimOnUserInteraction.featureGate",
+        "label": "Address · Show the full address when you click in",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.decodeURLsOnCopy",
+        "label": "Address · Copy addresses in readable form (%20 as a space)",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.show-protections-icon",
+        "label": "Buttons · Show the tracking-protection shield",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.show-pip-button",
+        "label": "Buttons · Show the Picture-in-Picture button",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.show-contextual-id",
+        "label": "Buttons · Show the container label",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.single-toolbar-show-copy-url",
+        "label": "Buttons · Show the copy URL button (single-toolbar layout)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.share-button.enabled",
+        "label": "Buttons · Show the Share button",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.theme.acrylic-urlbar",
+        "label": "Buttons · Zen's own frosted background (used when Panel · Background is Zen default)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.history",
+        "label": "Suggestions · Browsing history",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.bookmark",
+        "label": "Suggestions · Bookmarks",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.openpage",
+        "label": "Suggestions · Open tabs (Switch to tab)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.remotetab",
+        "label": "Suggestions · Tabs from your synced devices",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.show-pinned",
+        "label": "Suggestions · Pinned shortcuts when the URL bar is empty",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.show-sponsored",
+        "label": "Suggestions · Sponsored shortcuts when the URL bar is empty",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.engines",
+        "label": "Suggestions · Matching search engines (tab-to-search)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.clipboard",
+        "label": "Suggestions · The link you just copied",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.calculator",
+        "label": "Suggestions · Calculator",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.unitConversion.enabled",
+        "label": "Suggestions · Unit conversions",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.recentsearches",
+        "label": "Suggestions · Recent searches when the URL bar is empty",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.quickactions.enabled",
+        "label": "Suggestions · Enable Firefox quick actions",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.quickactions",
+        "label": "Suggestions · Quick actions among normal results (else only after \"> \")",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.suggestions.quick-actions",
+        "label": "Suggestions · Zen commands (Toggle compact mode, ...)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.contextualSearch.enabled",
+        "label": "Suggestions · Offer to search the current site",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.autoFill",
+        "label": "Suggestions · Autocomplete addresses inline",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.groupLabels.enabled",
+        "label": "Suggestions · Group headings",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.deduplication.enabled",
+        "label": "Suggestions · Merge history entries that differ only by #anchor",
+        "type": "checkbox"
+    },
+    {
+        "property": "keyword.enabled",
+        "label": "Search · Search when the text is not an address",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.search.suggest.enabled",
+        "label": "Search · Ask the search engine for suggestions (sends what you type)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.suggest.searches",
+        "label": "Search · Show those suggestions in the URL bar",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.showSearchSuggestionsFirst",
+        "label": "Search · Search suggestions above history",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.search.suggest.enabled.private",
+        "label": "Search · Search suggestions in private windows",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.richSuggestions.tail",
+        "label": "Search · Tail suggestions for long queries",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.formfill.enable",
+        "label": "Search · Remember search and form history (needed for past searches)",
+        "type": "checkbox"
+    },
+    {
+        "property": "zen.urlbar.hide-one-offs",
+        "label": "Search · Hide the search-engine buttons row (needs a restart)",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.shortcuts.bookmarks",
+        "label": "Search · Buttons row: search bookmarks",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.shortcuts.tabs",
+        "label": "Search · Buttons row: search tabs",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.shortcuts.history",
+        "label": "Search · Buttons row: search history",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.shortcuts.workspaces",
+        "label": "Search · Buttons row: search workspaces",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.fixup.dns_first_for_single_words",
+        "label": "Search · Try single words as a local host name first",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.speculativeConnect.enabled",
+        "label": "Advanced · Pre-connect to the likely site while typing",
+        "type": "checkbox"
+    },
+    {
+        "property": "browser.urlbar.ctrlCanonizesURLs",
+        "label": "Advanced · Ctrl+Enter turns \"example\" into www.example.com",
+        "type": "checkbox"
     }
 ]
