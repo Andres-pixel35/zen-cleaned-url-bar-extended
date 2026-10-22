@@ -49,8 +49,9 @@ usage() {
     cat <<'EOF'
 Usage: update.sh [options]
 
-Updates Cleaned URL Bar Extended to the latest version, keeping your settings.
-Zen must be closed while it runs.
+Updates the look of the URL bar (the mod's chrome.css and preferences.json) to
+the latest version when it changed, keeping your settings. Nothing is touched
+when it is already up to date. Zen must be closed when there is an update.
 
 Options:
   -p, --profile PATH  Zen profile folder (about:support > Profile Directory), or
@@ -86,15 +87,19 @@ main() {
     select_profile "$profile_arg"
     set_profile_paths
     is_installed || die "$MOD_NAME is not installed in this profile. Use install.sh instead."
-    require_zen_closed
 
     local previous version
     previous=$(installed_version)
     version=$(json_version "$ROOT_DIR/theme.json")
+    if mod_up_to_date; then
+        ok "$MOD_NAME is already up to date ($version); nothing was changed."
+        return 0
+    fi
+    require_zen_closed
     install_mod_files
     prefs_apply
     if [ "$previous" = "$version" ]; then
-        ok "Already at the latest version ($version); the files were refreshed."
+        ok "Updated the files of $MOD_NAME $version. Your settings were kept."
     else
         ok "Updated $MOD_NAME ${previous:-?} -> $version. Your settings were kept."
     fi

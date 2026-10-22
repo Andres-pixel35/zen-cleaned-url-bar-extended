@@ -9,8 +9,10 @@
 MOD_ID="zen-cleaned-url-bar-extended"
 # shellcheck disable=SC2034 # used by the scripts that source this file
 MOD_NAME="Cleaned URL Bar Extended"
+# shellcheck disable=SC2034 # used by uninstall.sh
 MOD_PREF_PREFIX="mod.cleanedurlbarext."
-MOD_FILES="chrome.css preferences.json readme.md"
+# The only files Zen reads from a mod folder (it never opens a local readme.md).
+MOD_FILES="chrome.css preferences.json"
 BACKUP_SUFFIX=".cleanedurlbarext.bak"
 
 LIB_DIR="$ROOT_DIR/lib"
@@ -386,16 +388,6 @@ pref_get() {
     ' "$1"
 }
 
-# Names of the user_pref lines starting with PREFIX.
-pref_names_with_prefix() {
-    [ -f "$1" ] || return 0
-    awk -v prefix="$2" '
-        index($0, "user_pref(\"" prefix) == 1 {
-            rest = substr($0, 12); print substr(rest, 1, index(rest, "\"") - 1)
-        }
-    ' "$1"
-}
-
 # Human-readable form of a raw prefs.js value.
 pref_display() {
     case "$1" in
@@ -451,25 +443,9 @@ warn_user_js_overrides() {
 
 # ------------------------------------------------------- mod installation ----
 
-# Prints "<pref><TAB><raw default>" for the mod's own options in preferences.json.
-mod_defaults() {
-    json flatten "$1" | awk -F'\t' -v prefix="$MOD_PREF_PREFIX" '
-        {
-            idx = substr($1, 1, index($1, "]")); field = substr($1, index($1, "]") + 2)
-            if (field == "property") { gsub(/"/, "", $2); prop[idx] = $2; if (!(idx in seen)) { seen[idx] = 1; order[++n] = idx } }
-            else if (field == "defaultValue") def[idx] = $2
-        }
-        END {
-            for (i = 1; i <= n; i++) {
-                idx = order[i]
-                if (index(prop[idx], prefix) == 1 && (idx in def)) print prop[idx] "\t" def[idx]
-            }
-        }
-    '
-}
-
-# Copies the mod into the profile and registers it with Zen. Keeps whether the
-# mod was enabled and every option the user already set.
+# Copies the mod into the profile and registers it with Zen, keeping whether the
+# mod was enabled. The options need nothing here: when Zen rebuilds its mod
+# stylesheet it first writes the default of every option that is not set yet.
 install_mod_files() {
     local f entry enabled="true" current new_json="$WORK_DIR/zen-themes.json"
 
@@ -495,19 +471,6 @@ install_mod_files() {
     backup_once "$THEMES_JSON"
     replace_file "$THEMES_JSON" "$new_json"
 
-    # Default values for options the user has not set yet, and removal of options
-    # that no longer exist. Without the defaults, Zen would only add them on its
-    # next rebuild, so the first start would miss them.
-    local existing name raw
-    existing=" $(pref_names_with_prefix "$PREFS_JS" "$MOD_PREF_PREFIX" | tr '\n' ' ') "
-    mod_defaults "$ROOT_DIR/preferences.json" >"$WORK_DIR/defaults"
-    while IFS="$(printf '\t')" read -r name raw; do
-        case "$existing" in *" $name "*) ;; *) pref_set "$name" "$raw" ;; esac
-    done <"$WORK_DIR/defaults"
-    for name in $existing; do
-        grep -q "^$(printf '%s' "$name" | sed 's/[.]/\\./g')$(printf '\t')" "$WORK_DIR/defaults" || pref_unset "$name"
-    done
-
     request_mods_rebuild
 }
 
@@ -522,6 +485,16 @@ installed_version() {
     [ -f "$THEMES_JSON" ] || return 0
     json get "$THEMES_JSON" "$MOD_ID" >"$WORK_DIR/entry" 2>/dev/null || return 0
     json_version "$WORK_DIR/entry"
+}
+
+# Status 0 when the installed mod is the same as this copy of the project.
+mod_up_to_date() {
+    local f
+    for f in $MOD_FILES; do
+        # Compared with cat rather than cmp, which minimal systems (Arch base) lack.
+        [ -f "$MOD_DIR/$f" ] && [ "$(cat "$ROOT_DIR/$f")" = "$(cat "$MOD_DIR/$f")" ] || return 1
+    done
+    [ "$(installed_version)" = "$(json_version "$ROOT_DIR/theme.json")" ]
 }
 
 is_installed() {
