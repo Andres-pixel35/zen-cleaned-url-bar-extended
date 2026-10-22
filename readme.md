@@ -33,6 +33,10 @@ curl -fsSL https://raw.githubusercontent.com/andres-pixel35/zen-cleaned-url-bar-
 
 `-p` also accepts the Zen folder that contains `profiles.ini` (for example `~/.zen`).
 
+If you used the original Cleaned URL Bar or Better Cleaned URL Bar, remove or disable it in Settings >
+Zen Mods: both style the same elements, so they would fight each other. (Your old settings are not
+reused; this mod has its own.)
+
 ### Update, configure, uninstall
 
 | What | Command |
