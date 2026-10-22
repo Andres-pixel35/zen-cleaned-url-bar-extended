@@ -320,14 +320,16 @@ backup_once() {
     [ -f "$1" ] && cp -p "$1" "$1$BACKUP_SUFFIX"
 }
 
-# Removes the backups made by backup_once (only uninstall.sh does this).
-# Prints what was removed.
+# Removes the backups made by backup_once (only uninstall.sh does this) and
+# sets REMOVED_BACKUPS to how many there were. Not meant for $(...): die has to
+# stop the script, not a subshell.
 remove_backups() {
     local f
+    REMOVED_BACKUPS=0
     for f in "$PREFS_JS$BACKUP_SUFFIX" "$THEMES_JSON$BACKUP_SUFFIX"; do
         [ -f "$f" ] || continue
         rm -f "$f" || die "Cannot remove $f."
-        printf '%s\n' "$f"
+        REMOVED_BACKUPS=$((REMOVED_BACKUPS + 1))
     done
 }
 
@@ -460,11 +462,8 @@ warn_user_js_overrides() {
 install_mod_files() {
     local f entry enabled="true" current new_json="$WORK_DIR/zen-themes.json"
 
-    mkdir -p "$MOD_DIR" || die "Cannot create $MOD_DIR."
-    for f in $MOD_FILES; do
-        cp "$ROOT_DIR/$f" "$MOD_DIR/$f" || die "Cannot copy $f to $MOD_DIR."
-    done
-
+    # Everything that can fail is prepared first, so a problem leaves the
+    # profile as it was.
     if [ -f "$THEMES_JSON" ]; then
         json flatten "$THEMES_JSON" >/dev/null 2>"$WORK_DIR/json-error" ||
             die "$THEMES_JSON is not valid JSON ($(cat "$WORK_DIR/json-error")). Fix or delete it, then run this again."
@@ -479,6 +478,11 @@ install_mod_files() {
     else
         json set /dev/null "$MOD_ID" "$entry" >"$new_json"
     fi || die "Could not update $THEMES_JSON."
+
+    mkdir -p "$MOD_DIR" || die "Cannot create $MOD_DIR."
+    for f in $MOD_FILES; do
+        cp "$ROOT_DIR/$f" "$MOD_DIR/$f" || die "Cannot copy $f to $MOD_DIR."
+    done
     backup_once "$THEMES_JSON"
     replace_file "$THEMES_JSON" "$new_json"
 

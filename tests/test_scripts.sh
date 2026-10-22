@@ -303,6 +303,38 @@ test_invalid_themes_json() {
     check "error names the file" out_has "zen-themes.json is not valid JSON"
     check "broken file left as it was" [ "$(cat "$p/zen-themes.json")" = '{"broken": ' ]
     check "prefs.js untouched on failure" cmp -s "$T/prefs-before" "$p/prefs.js"
+    check "failed install leaves no mod folder" [ ! -e "$p/chrome/zen-themes/zen-cleaned-url-bar-extended" ]
+
+    # The same on update: the installed files must stay as they were.
+    echo '{}' >"$p/zen-themes.json"
+    run install.sh --no-configure
+    echo '/* old */' >>"$p/chrome/zen-themes/zen-cleaned-url-bar-extended/chrome.css"
+    cp "$p/chrome/zen-themes/zen-cleaned-url-bar-extended/chrome.css" "$T/css-before"
+    echo '{"broken": ' >"$p/zen-themes.json"
+    run update.sh
+    check "invalid zen-themes.json stops the update" [ $? -ne 0 ]
+    check "failed update leaves the installed files alone" cmp -s "$T/css-before" "$p/chrome/zen-themes/zen-cleaned-url-bar-extended/chrome.css"
+}
+
+test_backup_removal_failure() {
+    new_home
+    local zen="$HOME_DIR/.zen" p
+    make_profile "$zen" "Profiles/b.b"
+    printf '[Profile0]\nName=B\nIsRelative=1\nPath=Profiles/b.b\nDefault=1\n' >"$zen/profiles.ini"
+    p="$zen/Profiles/b.b"
+    run install.sh --no-configure
+    # An rm that cannot delete the backups (the tests run as root, so permissions cannot do it).
+    printf '#!/bin/sh\nfor a in "$@"; do case "$a" in *.bak) echo "rm: cannot remove $a" >&2; exit 1 ;; esac; done\nexec %s "$@"\n' "$(command -v rm)" >"$SHIM/rm"
+    chmod +x "$SHIM/rm"
+    run uninstall.sh -y
+    check "uninstall reports a backup it cannot remove" [ $? -ne 0 ]
+    check "the error names the backup" out_has "Cannot remove $p/prefs.js.cleanedurlbarext.bak"
+    run uninstall.sh -y
+    check "leftover backup that cannot be removed is an error" [ $? -ne 0 ]
+    check "not reported as nothing to do" out_lacks "nothing to do"
+    rm -f "$SHIM/rm"
+    run uninstall.sh -y
+    check "leftover backups removed once possible" [ ! -e "$p/prefs.js.cleanedurlbarext.bak" ]
 }
 
 test_zen_running() {
@@ -443,7 +475,7 @@ test_pref_string_escaping() {
 
 for t in test_bootstrap_blocks_identical test_install_legacy_root test_xdg_flatpak_and_ambiguity \
     test_absolute_profile_and_fresh_files test_macos_layout test_invalid_themes_json test_zen_running \
-    test_configure test_pref_string_escaping test_nothing_left_behind; do
+    test_configure test_pref_string_escaping test_backup_removal_failure test_nothing_left_behind; do
     $t
 done
 
