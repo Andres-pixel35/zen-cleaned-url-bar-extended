@@ -320,6 +320,17 @@ backup_once() {
     [ -f "$1" ] && cp -p "$1" "$1$BACKUP_SUFFIX"
 }
 
+# Removes the backups made by backup_once (only uninstall.sh does this).
+# Prints what was removed.
+remove_backups() {
+    local f
+    for f in "$PREFS_JS$BACKUP_SUFFIX" "$THEMES_JSON$BACKUP_SUFFIX"; do
+        [ -f "$f" ] || continue
+        rm -f "$f" || die "Cannot remove $f."
+        printf '%s\n' "$f"
+    done
+}
+
 # replace_file TARGET NEWFILE: atomic replacement next to the target.
 replace_file() {
     local tmp

@@ -139,11 +139,14 @@ Only what Zen uses, all inside your Zen profile:
 - Your settings, in Zen's `prefs.js`: the mod's own (`mod.cleanedurlbarext.*`) and any URL bar
   preference you changed (those are normal Zen preferences).
 - `prefs.js.cleanedurlbarext.bak` and `zen-themes.json.cleanedurlbarext.bak`: a copy of those two files
-  from before the last change a script made, in case you need to undo it.
+  from before the last change a script made, in case you need to undo it. There is only ever one copy
+  of each (every run replaces it), so they take about as much space as the files themselves: usually
+  a few tens of KB for `prefs.js` and around 1 KB for `zen-themes.json`.
 
 The scripts themselves (`install.sh`, `configure.sh`, ...) are not kept: with `curl ... | bash` they
 are downloaded to a temporary folder that is deleted when they finish. `uninstall.sh` removes the mod
-folder, its entry and its `mod.cleanedurlbarext.*` settings.
+folder, its entry, its `mod.cleanedurlbarext.*` settings and the two backups (it only keeps the URL bar
+preferences you changed, unless you pass `--reset-prefs`).
 
 ## Customise
 
@@ -338,7 +341,7 @@ Start what you type with one of these characters and a space to search only one 
   values; Zen's settings page then edits them. Text options reach the CSS as variables, and every
   rule is wrapped in `@media -moz-pref(...)`, which is why an empty field means "Zen default".
 - Before changing `prefs.js` or `zen-themes.json` the scripts save a copy next to them, ending in
-  `.cleanedurlbarext.bak`.
+  `.cleanedurlbarext.bak`. `uninstall.sh` deletes those copies once it has finished successfully.
 - This mod is not in Zen's theme store, so Zen's automatic mod updates do not touch it; use
   `update.sh` to update.
 

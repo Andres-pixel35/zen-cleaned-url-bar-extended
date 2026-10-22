@@ -202,8 +202,10 @@ EOF
     run uninstall.sh
     check "uninstall without terminal needs -y" [ $? -ne 0 ]
     check "uninstall without -y changes nothing" [ -d "$p/chrome/zen-themes/zen-cleaned-url-bar-extended" ]
+    check "backups are kept until uninstall" [ -f "$p/prefs.js.cleanedurlbarext.bak" ] && [ -f "$p/zen-themes.json.cleanedurlbarext.bak" ]
     run uninstall.sh -y
     check "uninstall succeeds" [ $? -eq 0 ]
+    check "uninstall removes the backups" [ ! -e "$p/prefs.js.cleanedurlbarext.bak" ] && [ ! -e "$p/zen-themes.json.cleanedurlbarext.bak" ]
     check "mod folder removed" [ ! -e "$p/chrome/zen-themes/zen-cleaned-url-bar-extended" ]
     check "entry removed" [ "$(json_eval "$p/zen-themes.json" '"zen-cleaned-url-bar-extended" in d')" = False ]
     check "other mod still there" [ "$(json_eval "$p/zen-themes.json" '"other-mod" in d')" = True ]
@@ -214,6 +216,17 @@ EOF
     check "reset-prefs removes browser urlbar prefs" no_line "$p/prefs.js" 'browser.urlbar.maxRichResults'
     check "reset-prefs removes suggest.searches" no_line "$p/prefs.js" 'browser.urlbar.suggest.searches'
     check "reset-prefs lists what it reset" out_has "browser.urlbar.maxRichResults"
+    check "reset-prefs leaves no backup" [ ! -e "$p/prefs.js.cleanedurlbarext.bak" ]
+
+    # Leftover backups (configure.sh works without the mod) go with uninstall too.
+    echo 'x' >"$p/prefs.js.cleanedurlbarext.bak"
+    cp "$p/prefs.js" "$T/prefs-before"
+    run uninstall.sh -y
+    check "uninstall without the mod removes leftover backups" [ ! -e "$p/prefs.js.cleanedurlbarext.bak" ]
+    check "leftover backups are reported" out_has "removed its leftover backups"
+    check "removing leftovers leaves prefs.js alone" cmp -s "$T/prefs-before" "$p/prefs.js"
+    run uninstall.sh -y
+    check "nothing left: nothing to do" out_has "nothing to do"
     run update.sh
     check "update refuses when not installed" [ $? -ne 0 ]
     check "update explains" out_has "not installed"
@@ -363,6 +376,7 @@ test_configure() {
     check "keep leaves other values" has_line "$p/prefs.js" 'user_pref("browser.urlbar.trimWww", true);'
     check "unanswered section untouched" has_line "$p/prefs.js" 'user_pref("browser.urlbar.suggest.searches", false);'
     check "summary printed" out_has "zen.urlbar.behavior: Always float in the centre -> Expand in place, never float"
+    check "configure keeps a backup of prefs.js" grep -q 'zen.urlbar.behavior", "float"' "$p/prefs.js.cleanedurlbarext.bak"
 
     # Answering the default value removes the user value; q stops early; "d" resets.
     run_tty $'2\n\n\n\nd\nq\ny\n' configure.sh

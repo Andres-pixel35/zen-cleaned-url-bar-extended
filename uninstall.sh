@@ -48,10 +48,11 @@ usage() {
     cat <<'EOF'
 Usage: uninstall.sh [options]
 
-Removes Cleaned URL Bar Extended and its own settings from your Zen profile.
-URL bar preferences you changed through the mod or configure.sh (suggestions,
-floating mode...) are normal Zen settings and are kept, unless you pass
---reset-prefs. Zen must be closed while it runs.
+Removes Cleaned URL Bar Extended, its own settings and the backups the scripts
+made (*.cleanedurlbarext.bak) from your Zen profile. URL bar preferences you
+changed through the mod or configure.sh (suggestions, floating mode...) are
+normal Zen settings and are kept, unless you pass --reset-prefs. Zen must be
+closed while it runs.
 
 Options:
   -p, --profile PATH  Zen profile folder (about:support > Profile Directory), or
@@ -92,7 +93,12 @@ main() {
     select_profile "$profile_arg"
     set_profile_paths
     if ! is_installed && [ -z "$reset" ]; then
-        ok "$MOD_NAME is not installed in this profile; nothing to do."
+        # Backups can remain from configure.sh, which works without the mod.
+        if [ -n "$(remove_backups)" ]; then
+            ok "$MOD_NAME is not installed in this profile; removed its leftover backups."
+        else
+            ok "$MOD_NAME is not installed in this profile; nothing to do."
+        fi
         return 0
     fi
     if [ -z "$yes" ]; then
@@ -133,7 +139,8 @@ main() {
             ok "The URL bar preferences were already at Zen's defaults."
         fi
     fi
-    say "    Backups of the changed files end in $BACKUP_SUFFIX in $PROFILE."
+    # Everything succeeded, so the backups are no longer needed.
+    remove_backups >/dev/null
 }
 
 main "$@"
