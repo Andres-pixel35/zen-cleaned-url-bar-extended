@@ -521,12 +521,62 @@ is_installed() {
 
 # --------------------------------------------------------------- catalogue ----
 
+# Prints the Zen version that last opened the profile, e.g. "1.24.2b", from the
+# "LastVersion=1.24.2b_<build id>/<build id>" line Zen writes to compatibility.ini
+# on every start. Prints nothing when that is unknown.
+zen_profile_version() {
+    [ -f "$PROFILE/compatibility.ini" ] || return 0
+    awk '
+        { sub(/\r$/, "") }
+        /^LastVersion=/ { v = substr($0, 13); sub(/_.*/, "", v); print v; exit }
+    ' "$PROFILE/compatibility.ini" 2>/dev/null
+}
+
+# Status 0 when Zen version $1 is $2 or newer. Only the leading numbers count
+# ("1.24.2b" -> 1.24.2, twilight "1.25t" -> 1.25); a missing part counts as 0.
+version_at_least() {
+    local have want i h w
+    IFS=. read -r -a have <<EOF
+$(printf '%s' "$1" | sed 's/[^0-9.].*//')
+EOF
+    IFS=. read -r -a want <<EOF
+$(printf '%s' "$2" | sed 's/[^0-9.].*//')
+EOF
+    for ((i = 0; i < ${#have[@]} || i < ${#want[@]}; i++)); do
+        h=${have[$i]:-0} w=${want[$i]:-0}
+        # 10# keeps a part like "08" from being read as octal.
+        [ $((10#$h)) -gt $((10#$w)) ] && return 0
+        [ $((10#$h)) -lt $((10#$w)) ] && return 1
+    done
+    return 0
+}
+
+# Prints the default that applies to Zen version $2 from a catalogue default
+# field such as "false;1.24.2b=true" (see lib/catalogue.txt). An empty version
+# means unknown: the newest default is used, as Zen keeps itself up to date.
+catalogue_default() {
+    local spec=$1 version=$2 def entry
+    def=${spec%%;*}
+    while IFS= read -r entry; do
+        [ -n "$entry" ] || continue
+        if [ -z "$version" ] || version_at_least "$version" "${entry%%=*}"; then
+            def=${entry#*=}
+        fi
+    done <<EOF
+$(printf '%s\n' "${spec#"$def"}" | tr ';' '\n')
+EOF
+    printf '%s' "$def"
+}
+
 # Loads lib/catalogue.txt into parallel arrays (index = question number),
-# RENAMED_OLD/RENAMED_NEW, and CAT_REVISION (the highest "since").
+# RENAMED_OLD/RENAMED_NEW, and CAT_REVISION (the highest "since"). Defaults that
+# changed between Zen versions are resolved for ZEN_VERSION (the profile's Zen,
+# see zen_profile_version), so PROFILE must be set first.
 load_catalogue() {
     CAT_KIND=() CAT_PREF=() CAT_DEFAULT=() CAT_DEP=() CAT_QUESTION=() CAT_HELP=() CAT_CHOICES=() CAT_SECTION=() CAT_SINCE=()
     SECTION_TITLE=() SECTION_DESC=() RENAMED_OLD=() RENAMED_NEW=()
     CAT_REVISION=1
+    ZEN_VERSION=$(zen_profile_version)
     local kind pref def dep question help choices since
     while IFS='|' read -r kind pref def dep question help choices since; do
         case "$kind" in
@@ -544,6 +594,7 @@ load_catalogue() {
         esac
         CAT_KIND+=("$kind")
         CAT_PREF+=("$pref")
+        case "$def" in *';'*) def=$(catalogue_default "$def" "$ZEN_VERSION") ;; esac
         CAT_DEFAULT+=("$def")
         CAT_DEP+=("$dep")
         CAT_QUESTION+=("$question")

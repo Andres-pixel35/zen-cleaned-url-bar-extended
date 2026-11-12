@@ -17,7 +17,7 @@ nothing; everything else works:
 | 1.17b | All except hiding the split view button | The same as 1.16b, except `zen.urlbar.show-contextual-id`, which works |
 | 1.18b, 1.19.9b, 1.21b | All | In 1.19.9b: `browser.urlbar.trimWww`, `browser.urlbar.share-button.enabled`, `browser.urlbar.shortcuts.workspaces`, `zen.theme.acrylic-urlbar`, `zen.urlbar.show-pinned`, `zen.urlbar.show-sponsored` |
 | 1.22b, 1.23b | All | `zen.theme.acrylic-urlbar` (added in 1.23.1b), `zen.urlbar.show-pinned` and `zen.urlbar.show-sponsored` (added in 1.23.3b) |
-| 1.23.3b, 1.23.4b | All | None |
+| 1.23.3b, 1.23.4b, 1.24b, 1.24.1b, 1.24.2b | All | None |
 
 A version between two rows works at least as well as the row above it: Zen and Firefox only added
 these buttons and preferences over time, never removed them.
@@ -33,10 +33,16 @@ Which preferences exist was read from the 1.16b, 1.17b, 1.19.9b, 1.22b, 1.23b an
 versions that added `zen.theme.acrylic-urlbar`, `zen.urlbar.show-pinned` and
 `zen.urlbar.show-sponsored` come from Zen's source code.
 
+On 1.24b, 1.24.1b and 1.24.2b, `install.sh` was run the same way, and every look setting was set and
+checked automatically in the real URL bar: open in place, floating and at rest. Each behaviour
+preference's existence, type and default were read from the running Zen, and Zen's code was checked to
+still use it. `configure.sh`, `update.sh` and `uninstall.sh` were run against 1.24.1b, and
+`configure.sh` against 1.24.2b, with the results read back from Zen.
+
 </details>
 
 > [!CAUTION]
-> Zen versions newer than 1.23.4b were not available to test. Zen changes its URL bar now and then,
+> Zen versions newer than 1.24.2b were not available to test. Zen changes its URL bar now and then,
 > so a future version may need an update of this mod.
 
 ## Tools used by the scripts

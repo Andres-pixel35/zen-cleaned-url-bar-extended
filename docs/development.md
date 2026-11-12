@@ -20,6 +20,10 @@ header explains the line format.
 - A new question gets the next `since` revision, so `update.sh` offers it to existing users.
 - When Zen renames a preference, keep the question under the new name and add
   `@renamed|<old>|<new>`, so saved values are moved.
+- When Zen changes a preference's default, do not just replace it: append the change, e.g.
+  `false;1.24.2b=true`. `configure.sh` treats an answer equal to Zen's default as "remove the user
+  value", so a default that is wrong for the installed Zen would silently drop that answer. The
+  scripts pick the default for the Zen version in the profile's `compatibility.ini`.
 - Update the tables in [Behaviour settings](behaviour-settings.md) to match.
 
 ## Releases

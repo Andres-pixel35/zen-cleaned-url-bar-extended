@@ -19,7 +19,9 @@ The URL bar's behaviour comes from Zen's own preferences, the ones you could als
   [Install, update and uninstall](install.md#the-scripts-at-a-glance).
 
 These are normal Zen preferences: they stay when the mod is disabled or removed, unless you uninstall
-with `--reset-prefs`. The "Zen default" column shows Zen 1.23's default.
+with `--reset-prefs`. The "Zen default" column shows the default of Zen 1.24.2b and notes where an
+older Zen had another one; `configure.sh` uses the default of the Zen version that last opened your
+profile.
 
 > [!NOTE]
 > - Some preferences only matter together, and `configure.sh` skips the questions that do not apply.
@@ -82,7 +84,7 @@ Buttons Zen itself can show or hide in the URL bar (the mod adds more icon optio
 | Show the container label when a tab is in a container? | `zen.urlbar.show-contextual-id` | off | Yes |
 | Show the "Copy URL" button in the single-toolbar layout? | `zen.urlbar.single-toolbar-show-copy-url` | on | Yes |
 | Show the Share button? | `browser.urlbar.share-button.enabled` | off | Yes |
-| Use Zen's own frosted-glass background for the open URL bar?<br><sub>The mod's "Panel: Background" setting replaces it unless that setting is left on "Zen default".</sub> | `zen.theme.acrylic-urlbar` | off | Yes |
+| Use Zen's own frosted-glass background for the open URL bar?<br><sub>It has two parts: a see-through colour and a strong blur. The mod's "Panel: Background" setting replaces the colour and "Panel: Background blur" replaces the blur, so with the mod's defaults this changes nothing; leave those settings empty (Zen default) to see it.</sub> | `zen.theme.acrylic-urlbar` | on (off before Zen 1.24.2b) | Yes |
 
 ## Suggestions
 

@@ -41,7 +41,7 @@
         "property": "mod.cleanedurlbarext.panel.blur",
         "label": "Panel · Background blur (size in px, e.g. 25px; 0px = none)",
         "type": "string",
-        "placeholder": "No blur",
+        "placeholder": "Zen default",
         "defaultValue": "25px"
     },
     {
@@ -447,7 +447,7 @@
     },
     {
         "property": "zen.theme.acrylic-urlbar",
-        "label": "Buttons · Zen's own frosted background (used when Panel · Background is Zen default)",
+        "label": "Buttons · Zen's own frosted background (its colour shows when Panel · Background is Zen default, its blur when Panel · Background blur is empty)",
         "type": "checkbox"
     },
     {

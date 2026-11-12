@@ -544,6 +544,64 @@ test_configure() {
     check "--no-configure neither asks nor configures" out_lacks "Configure the URL bar"
 }
 
+# A default Zen changed (zen.theme.acrylic-urlbar: off before 1.24.2b, on from it)
+# follows the Zen version that last opened the profile.
+test_version_dependent_default() {
+    new_home
+    local zen="$HOME_DIR/.zen" p acrylic=zen.theme.acrylic-urlbar
+    # Section 3 ("Buttons and icons"): five questions kept, then the acrylic one.
+    local skip5=$'3\n\n\n\n\n\n'
+    make_profile "$zen" "Profiles/v.v"
+    printf '[Profile0]\nName=V\nIsRelative=1\nPath=Profiles/v.v\nDefault=1\n' >"$zen/profiles.ini"
+    p="$zen/Profiles/v.v"
+    zen_version() { printf '[Compatibility]\nLastVersion=%s_20261111122308/20261111122308\n' "$1" >"$p/compatibility.ini"; }
+    listed() { grep -qE "^  $acrylic +$1\$" "$T/out"; }
+
+    (
+        ROOT_DIR=$ROOT
+        # shellcheck source=../lib/common.sh
+        . "$ROOT/lib/common.sh"
+        version_at_least 1.24.2b 1.24.2b && version_at_least 1.24.10b 1.24.2b &&
+            version_at_least 1.25t 1.24.2b && version_at_least 2 1.99.9 && version_at_least 1.24 1.24.0 &&
+            version_at_least 1.08 1.8 && ! version_at_least 1.24.1b 1.24.2b && ! version_at_least 1.9 1.24.2b &&
+            ! version_at_least "" 1.24.2b &&
+            [ "$(catalogue_default 'false;1.24.2b=true' 1.24.1b)" = false ] &&
+            [ "$(catalogue_default 'false;1.24.2b=true' 1.24.2b)" = true ] &&
+            [ "$(catalogue_default 'false;1.24.2b=true' '')" = true ] &&
+            [ "$(catalogue_default 'a;1.2=b;1.5=c' 1.1)" = a ] &&
+            [ "$(catalogue_default 'a;1.2=b;1.5=c' 1.3)" = b ] &&
+            [ "$(catalogue_default 'a;1.2=b;1.5=c' 1.5.1)" = c ]
+    )
+    check "version comparison and per-version defaults" [ $? -eq 0 ]
+
+    # Zen 1.24.1b: off is the default, so "no" saves nothing and "yes" is saved.
+    zen_version 1.24.1b
+    run configure.sh --list
+    check "1.24.1b: acrylic default shown as off" listed 'off \(Zen default\)'
+    run_tty "${skip5}n"$'\ny\n' configure.sh
+    check "1.24.1b: answering off (the default) saves nothing" out_has "Nothing to change"
+    run_tty "${skip5}y"$'\ny\n' configure.sh
+    check "1.24.1b: answering on is saved" has_line "$p/prefs.js" "user_pref(\"$acrylic\", true);"
+
+    # Zen 1.24.2b: on is the default now.
+    zen_version 1.24.2b
+    run_tty "${skip5}y"$'\ny\n' configure.sh
+    check "1.24.2b: answering on (the new default) removes the user value" no_line "$p/prefs.js" "$acrylic"
+    run configure.sh --list
+    check "1.24.2b: acrylic default shown as on" listed 'on \(Zen default\)'
+    run_tty "${skip5}n"$'\ny\n' configure.sh
+    check "1.24.2b: answering off is saved" has_line "$p/prefs.js" "user_pref(\"$acrylic\", false);"
+
+    # Twilight 1.25t counts as newer; an unknown version uses the newest default.
+    zen_version 1.25t
+    run_tty "${skip5}d"$'\ny\n' configure.sh
+    run configure.sh --list
+    check "twilight 1.25t: acrylic default shown as on" listed 'on \(Zen default\)'
+    rm -f "$p/compatibility.ini"
+    run configure.sh --list
+    check "unknown version: newest default shown" listed 'on \(Zen default\)'
+}
+
 test_nothing_left_behind() {
     local left
     left=$(ls -A "$T/tmp")
@@ -571,7 +629,8 @@ test_pref_string_escaping() {
 
 for t in test_bootstrap_blocks_identical test_install_legacy_root test_xdg_flatpak_and_ambiguity \
     test_absolute_profile_and_fresh_files test_macos_layout test_invalid_themes_json test_zen_running \
-    test_configure test_pref_string_escaping test_backup_removal_failure test_update_behaviour test_nothing_left_behind; do
+    test_configure test_version_dependent_default test_pref_string_escaping test_backup_removal_failure \
+    test_update_behaviour test_nothing_left_behind; do
     $t
 done
 
