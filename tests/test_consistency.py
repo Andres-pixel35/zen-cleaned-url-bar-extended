@@ -61,13 +61,30 @@ for n, line in enumerate(read("lib/catalogue.txt").splitlines(), 1):
         error(f"catalogue line {n}: unknown kind {kind}")
     if pref in catalogue:
         error(f"catalogue: {pref} listed twice")
-    if kind == "bool" and default not in ("true", "false"):
-        error(f"catalogue: {pref} bool default must be true/false")
-    if kind == "int" and not re.fullmatch(r"-?\d+", default):
-        error(f"catalogue: {pref} int default must be a number")
+    # "<default>" or "<default>;<version>=<default>;..." for a default Zen changed.
+    defaults = [default.split(";", 1)[0]]
+    previous = None
+    for change in default.split(";")[1:]:
+        version, _, value = change.partition("=")
+        number = re.fullmatch(r"(\d+(?:\.\d+)*)[a-z]*", version)
+        if not number or not value:
+            error(f"catalogue: {pref} default change {change!r} must look like 1.24.2b=<value>")
+            continue
+        parts = [int(x) for x in number.group(1).split(".")]
+        if previous is not None and parts + [0] * 4 <= previous + [0] * 4:
+            error(f"catalogue: {pref} default changes must be in increasing version order")
+        previous = parts
+        defaults.append(value)
+    if any(a == b for a, b in zip(defaults, defaults[1:])):
+        error(f"catalogue: {pref} lists a default change to the value it already had")
     values = [c.split("=", 1)[0] for c in choices.split(";")] if choices else []
-    if kind == "choice" and default not in values:
-        error(f"catalogue: {pref} default {default!r} is not one of its choices")
+    for d in defaults:
+        if kind == "bool" and d not in ("true", "false"):
+            error(f"catalogue: {pref} bool default must be true/false")
+        if kind == "int" and not re.fullmatch(r"-?\d+", d):
+            error(f"catalogue: {pref} int default must be a number")
+        if kind == "choice" and d not in values:
+            error(f"catalogue: {pref} default {d!r} is not one of its choices")
     if not question.endswith("?"):
         error(f"catalogue: question for {pref} should end with '?'")
     if not line.isascii():

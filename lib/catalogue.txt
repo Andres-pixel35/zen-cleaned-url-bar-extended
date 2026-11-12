@@ -10,7 +10,14 @@
 #   <kind>|<pref>|<zen default>|<depends on>|<question>|<help>|<choices>|<since>
 #
 #   kind     bool, int or choice (choice = string preference with fixed values).
-#   default  Zen 1.23 default. Only used for display: "reset" removes the user value.
+#   default  Zen's default value. configure.sh shows it as "(Zen default)", and an
+#            answer equal to it removes the user value instead of saving it.
+#            When Zen changed a default, list each change after the oldest value:
+#            <default>;<version>=<default>, versions in increasing order. For example
+#            false;1.24.2b=true is false before Zen 1.24.2b and true from 1.24.2b on.
+#            The scripts use the Zen version that last opened the profile (LastVersion
+#            in its compatibility.ini), or the newest default when that is unknown.
+#            Only the numbers of a version count, so a twilight 1.25t is newer.
 #   depends  Optional pref that must be true (or false when prefixed with "!") for
 #            the question to make sense; otherwise the question is skipped.
 #   choices  For choice (and optionally int): value=Label;value=Label
@@ -46,7 +53,7 @@ bool|zen.urlbar.show-pip-button|false||Show the Picture-in-Picture button when a
 bool|zen.urlbar.show-contextual-id|false||Show the container label when a tab is in a container?|||1
 bool|zen.urlbar.single-toolbar-show-copy-url|true||Show the "Copy URL" button in the single-toolbar layout?|||1
 bool|browser.urlbar.share-button.enabled|false||Show the Share button?|||1
-bool|zen.theme.acrylic-urlbar|false||Use Zen's own frosted-glass background for the open URL bar?|The mod's "Panel: Background" setting replaces it unless that setting is left on "Zen default".||1
+bool|zen.theme.acrylic-urlbar|false;1.24.2b=true||Use Zen's own frosted-glass background for the open URL bar?|It has two parts: a see-through colour and a strong blur. The mod's "Panel: Background" setting replaces the colour and "Panel: Background blur" replaces the blur, so with the mod's defaults this changes nothing; leave those settings empty (Zen default) to see it.||1
 
 @section|Suggestions|Which kinds of results appear in the dropdown.
 bool|browser.urlbar.suggest.history|true||Suggest pages from your browsing history?|||1

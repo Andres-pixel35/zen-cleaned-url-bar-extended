@@ -40,7 +40,7 @@ are grouped by the part of the URL bar they change:
 | Background transparency | A percentage: `0%` solid, `100%` invisible. Used with the accent and custom colours | `90%` |
 | Custom colour, dark theme | A CSS colour, e.g. `#1a1a1a`. Used when Background is Custom and Zen's theme is dark | `hsl(0 0 10)` |
 | Custom colour, light theme | A CSS colour, e.g. `#e6e6e6`. Used when Background is Custom and Zen's theme is light | `hsl(0 0 90)` |
-| Background blur | A size, e.g. `25px`. `0px` or empty = no blur | `25px` |
+| Background blur | A size, e.g. `25px`. `0px` = no blur. Empty = Zen's own: a strong blur while Zen's frosted-glass background (`zen.theme.acrylic-urlbar`, on by default from Zen 1.24.2b) is on, none while it is off | `25px` |
 | Corner radius | A size, e.g. `15px`. `0px` = square corners | `15px` |
 | Border | A CSS border, e.g. `2px solid #808080`. `none` = no border | `3px solid hsl(0 0 50 / 10%)` |
 | Remove the drop shadow | On or off | off |
