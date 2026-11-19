@@ -10,6 +10,9 @@
 #       FILE with the top-level key K set to RAW, printed in compact form.
 #   ZCUB_JSON_KEY=K awk -f json.awk -v mode=del FILE
 #       FILE without the top-level key K, printed in compact form.
+#   awk -f json.awk -v mode=keys FILE
+#       The top-level keys in file order, one per line, as written in the file
+#       (escapes are kept, so each one can be passed back as ZCUB_JSON_KEY).
 #
 # Keys and values come from the environment because `awk -v` would interpret
 # the backslash escapes they may contain. An empty FILE counts as `{}`.
@@ -120,7 +123,7 @@ END {
         exit 0
     }
 
-    # get / set / del work on the members of the top-level object.
+    # keys / get / set / del work on the members of the top-level object.
     count = 0
     skip_ws()
     if (pos <= len) {
@@ -152,6 +155,11 @@ END {
             fail("unexpected data after the end")
     }
 
+    if (mode == "keys") {
+        for (i = 1; i <= count; i++)
+            print keys[i]
+        exit 0
+    }
     key = ENVIRON["ZCUB_JSON_KEY"]
     if (mode == "get") {
         for (i = 1; i <= count; i++)

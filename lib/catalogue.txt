@@ -52,6 +52,7 @@ bool|zen.urlbar.show-protections-icon|false||Show the tracking-protection shield
 bool|zen.urlbar.show-pip-button|false||Show the Picture-in-Picture button when a page plays video?|||1
 bool|zen.urlbar.show-contextual-id|false||Show the container label when a tab is in a container?|||1
 bool|zen.urlbar.single-toolbar-show-copy-url|true||Show the "Copy URL" button in the single-toolbar layout?|||1
+bool|zen.urlbar.single-toolbar-show-zoom-button|false||Show the zoom level button in the single-toolbar layout when a page is zoomed?|Zen hides it while the URL bar is open either way. Needs Zen 1.24.3b or newer.||2
 bool|browser.urlbar.share-button.enabled|false||Show the Share button?|||1
 bool|zen.theme.acrylic-urlbar|false;1.24.2b=true||Use Zen's own frosted-glass background for the open URL bar?|It has two parts: a see-through colour and a strong blur. The mod's "Panel: Background" setting replaces the colour and "Panel: Background blur" replaces the blur, so with the mod's defaults this changes nothing; leave those settings empty (Zen default) to see it.||1
 

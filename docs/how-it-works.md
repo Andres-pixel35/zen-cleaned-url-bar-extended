@@ -6,12 +6,14 @@
 
 - Zen loads mods from `chrome/zen-themes/<id>/` inside your profile and lists them in
   `zen-themes.json`. The installer puts the mod there and registers it.
-- Zen only rebuilds its combined mod stylesheet (`chrome/zen-themes.css`) when a mod changes, or when
-  its mod-update check runs at startup, which happens whenever `zen.mods.last-update` is unset. The
-  scripts clear it, so the change shows up a moment after the next start. (That check also looks for
-  updates of your other mods, as Zen does on its own every few weeks.)
-- The mod's settings are preferences named `mod.cleanedurlbarext.*`. Zen writes their default values,
-  and Zen's settings page edits them. Text settings reach the CSS as variables, and every rule is
+- Zen applies every mod from one combined stylesheet, `chrome/zen-themes.css`, which it loads as it is
+  when it starts. It only rebuilds that file when a mod or a mod setting changes inside Zen (up to Zen
+  1.24.2b, also at startup when `zen.mods.last-update` was unset; Zen 1.24.3b dropped that). So the
+  scripts rebuild it themselves whenever they add, update or remove this mod. They write the same file
+  Zen would, with the `chrome.css` of every enabled mod in `zen-themes.json`, in its order, and Zen's
+  next rebuild gives the same result.
+- The mod's settings are preferences named `mod.cleanedurlbarext.*`. The scripts save the default of
+  every setting that has none yet, as Zen does when it rebuilds, and Zen's settings page edits them. Text settings reach the CSS as variables, and every rule is
   wrapped in `@media -moz-pref(...)`, which is why an empty field means "Zen default".
 - Before changing `prefs.js` or `zen-themes.json`, the scripts save a copy next to them ending in
   `.cleanedurlbarext.bak`. `uninstall.sh` deletes those copies once it has finished successfully.
@@ -34,5 +36,5 @@
   paints them in a dark colour meant for its white tile).
 - **No dependency on the mod's display name**: settings use `-moz-pref()` instead of the hidden
   element Zen names after the mod, and the Zen-only `-moz-bool-pref` is no longer needed.
-- **Settings take effect right after installing**, instead of only after Zen happens to rebuild its
-  mod stylesheet.
+- **The mod is there as soon as Zen starts** after installing or updating, instead of only after Zen
+  happens to rebuild its mod stylesheet (Zen 1.24.3b and newer no longer rebuild it at startup).

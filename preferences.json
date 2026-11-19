@@ -441,6 +441,11 @@
         "type": "checkbox"
     },
     {
+        "property": "zen.urlbar.single-toolbar-show-zoom-button",
+        "label": "Buttons · Show the zoom level button (single-toolbar layout, Zen 1.24.3b+)",
+        "type": "checkbox"
+    },
+    {
         "property": "browser.urlbar.share-button.enabled",
         "label": "Buttons · Show the Share button",
         "type": "checkbox"

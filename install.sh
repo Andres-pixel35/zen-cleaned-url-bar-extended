@@ -105,7 +105,7 @@ main() {
     else
         ok "Installed $MOD_NAME $version into $MOD_DIR"
     fi
-    say "    Start Zen: the mod is applied a moment after startup. Customise it in"
+    say "    Start Zen to see it. Customise it in"
     say "    Settings > Zen Mods > $MOD_NAME."
     if [ ${#MIGRATED[@]} -gt 0 ]; then
         ok "Moved settings that Zen renamed:"
