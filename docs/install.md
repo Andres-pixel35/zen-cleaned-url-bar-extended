@@ -48,8 +48,8 @@ Every script also accepts:
 2. Copies `chrome.css` and `preferences.json` into the profile's
    `chrome/zen-themes/zen-cleaned-url-bar-extended/` folder and registers the mod in
    `zen-themes.json`. Settings you already had are kept.
-3. Makes Zen rebuild its mod stylesheet at the next start, so the mod shows up a moment after Zen
-   starts (see [How it works](how-it-works.md)).
+3. Rebuilds Zen's combined mod stylesheet (`chrome/zen-themes.css`) and saves the defaults of the
+   mod's settings, so the mod is there as soon as Zen starts (see [How it works](how-it-works.md)).
 4. Asks whether you also want to set the URL bar's behaviour. If you answer yes, it runs the
    `configure.sh` questions right away.
 
@@ -86,7 +86,8 @@ The mod is not in Zen's theme store, so Zen's automatic mod updates do not touch
 keeps both parts up to date and changes only what is new:
 
 - **The look**: it compares the installed `chrome.css` and `preferences.json` with the latest ones
-  and replaces them only when they differ.
+  and replaces them only when they differ, or when Zen's mod stylesheet does not have the latest
+  look yet. It then rebuilds that stylesheet and saves the defaults of any new settings.
 - **The behaviour settings** saved by `configure.sh`:
   - If Zen renamed one of those preferences, your value is moved to the new name. A value you already
     saved under the new name is kept.
@@ -99,7 +100,8 @@ When everything is up to date it changes nothing.
 
 `uninstall.sh` asks for confirmation (skip it with `-y`), then removes:
 
-- the mod's folder and its entry in `zen-themes.json`;
+- the mod's folder and its entry in `zen-themes.json`, and its part of Zen's mod stylesheet
+  (`chrome/zen-themes.css`, rebuilt with your other mods);
 - the mod's own settings (`mod.cleanedurlbarext.*`);
 - the backups the scripts made (`*.cleanedurlbarext.bak`), once everything else succeeded.
 
@@ -132,6 +134,7 @@ The scripts do not run on Windows. There (or to do it yourself anywhere):
 3. Open `zen-themes.json` in the profile (create it with `{}` if it does not exist). Add the content of
    [`theme.json`](../theme.json) as a new entry with the key `"zen-cleaned-url-bar-extended"` and an
    extra `"enabled": true`.
-4. Start Zen, open `about:config`, delete `zen.mods.last-update` and restart Zen. Zen rebuilds its
-   mod stylesheet at the next start when that preference is missing. (Changing any setting of any mod
-   in **Settings > Zen Mods** also rebuilds it, without a restart.)
+4. Start Zen, open **Settings > Zen Mods** and turn **Cleaned URL Bar Extended** off and on again with
+   its switch. That makes Zen rebuild its mod stylesheet and save the defaults of the mod's settings,
+   so the new URL bar appears right away. Zen only does this when a mod changes in Zen; it does not
+   pick up files added while it was closed by itself.

@@ -68,6 +68,9 @@ def check(r, awk, tmp):
     assert len(got) == len(want), (awk, text, out)
     for (gp, graw), (wp, wv) in zip(got, want):
         assert json.loads(graw) == wv, (awk, gp, graw, wv)
+    # keys: every top-level key, in file order
+    code, out, err = run(awk, "keys", tmp)
+    assert code == 0 and out.splitlines() == list(doc), (awk, out, text)
     # get / set / del on a random existing or new key
     keys = list(doc) + ["new-key"]
     key = r.choice(keys)

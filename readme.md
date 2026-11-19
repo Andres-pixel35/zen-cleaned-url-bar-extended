@@ -35,7 +35,7 @@ its look and its behaviour.
 ## Install
 
 > [!IMPORTANT]
-> Needs **Zen 1.16b or newer** on **Linux or macOS** (1.23.3b or newer for every option to work).
+> Needs **Zen 1.16b or newer** on **Linux or macOS** (1.24.3b or newer for every option to work).
 > The scripts only use tools that come with the system. See [Requirements](docs/requirements.md).
 
 1. Close Zen.
@@ -48,7 +48,7 @@ its look and its behaviour.
 3. The script installs the mod into the profile Zen opens by default, keeping any settings you
    already had. It then asks whether you want to set the URL bar's [behaviour](#behaviour) now;
    you can also do it later.
-4. Start Zen. The new URL bar appears a moment after startup.
+4. Start Zen. The new URL bar is there right away.
 
 > [!WARNING]
 > If you use the original Cleaned URL Bar or Better Cleaned URL Bar, remove or disable it in
@@ -117,7 +117,7 @@ What each script does, its options and what stays on your computer:
 |---|---|
 | [Install, update and uninstall](docs/install.md) | Choosing a profile, script options, what each script changes, what is kept on your computer, installing by hand (Windows) |
 | [Look settings](docs/look-settings.md) | All 46 look settings, the values they accept and their defaults |
-| [Behaviour settings](docs/behaviour-settings.md) | All 59 behaviour preferences `configure.sh` asks about, their Zen defaults and which are in Zen's settings page |
+| [Behaviour settings](docs/behaviour-settings.md) | All 60 behaviour preferences `configure.sh` asks about, their Zen defaults and which are in Zen's settings page |
 | [Requirements](docs/requirements.md) | Which Zen versions support which options, and the tools the scripts use |
 | [How it works](docs/how-it-works.md) | How Zen loads the mod and what was fixed compared to the original |
 | [Development](docs/development.md) | Running the tests and adding behaviour questions |

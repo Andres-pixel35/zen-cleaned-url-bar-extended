@@ -96,6 +96,8 @@ main() {
     is_installed && installed=1
     # Settings can remain without the mod: configure.sh works on its own.
     [ -f "$PREFS_JS" ] && grep -qF "user_pref(\"$MOD_PREF_PREFIX" "$PREFS_JS" && leftovers=1
+    # Zen 1.24.3b+ keeps a stylesheet it built as it is until a mod changes in Zen.
+    mods_stylesheet_has_mod && leftovers=1
     if [ -z "$installed$leftovers$reset" ]; then
         remove_backups
         if [ "$REMOVED_BACKUPS" -gt 0 ]; then
@@ -113,14 +115,37 @@ main() {
     fi
     require_zen_closed
 
+    # Zen's mod stylesheet is rebuilt without the mod (see lib/common.sh), from
+    # zen-themes.json as it will be. With an unreadable zen-themes.json it is left
+    # alone: rebuilding would drop the other mods too.
+    local list="$WORK_DIR/zen-themes.json" entry="" css=""
+    if [ ! -f "$THEMES_JSON" ]; then
+        : >"$list" || die "Cannot write $list."
+        css=1
+    elif json flatten "$THEMES_JSON" >/dev/null 2>&1; then
+        if json get "$THEMES_JSON" "$MOD_ID" >/dev/null 2>&1; then
+            json del "$THEMES_JSON" "$MOD_ID" >"$list" || die "Could not update $THEMES_JSON."
+            entry=1
+        else
+            cat "$THEMES_JSON" >"$list" || die "Cannot read $THEMES_JSON."
+        fi
+        css=1
+    else
+        warn "$THEMES_JSON is not valid JSON, so it and Zen's mod stylesheet were left as they are."
+    fi
+    [ -n "$css" ] && { [ -n "$installed" ] || mods_stylesheet_has_mod; } &&
+        build_mods_stylesheet "$list" "$WORK_DIR/zen-themes.css"
+
     if [ -n "$installed" ]; then
         rm -rf "$MOD_DIR" || die "Cannot remove $MOD_DIR."
-        if [ -f "$THEMES_JSON" ] && json get "$THEMES_JSON" "$MOD_ID" >/dev/null 2>&1; then
-            json del "$THEMES_JSON" "$MOD_ID" >"$WORK_DIR/zen-themes.json" || die "Could not update $THEMES_JSON."
-            backup_once "$THEMES_JSON"
-            replace_file "$THEMES_JSON" "$WORK_DIR/zen-themes.json"
-        fi
-        request_mods_rebuild
+    fi
+    if [ -n "$entry" ]; then
+        backup_once "$THEMES_JSON"
+        replace_file "$THEMES_JSON" "$list"
+    fi
+    if [ -f "$WORK_DIR/zen-themes.css" ]; then
+        mkdir -p "$(dirname "$MODS_CSS")" || die "Cannot create $(dirname "$MODS_CSS")."
+        replace_file "$MODS_CSS" "$WORK_DIR/zen-themes.css"
     fi
     pref_unset_prefix "$MOD_PREF_PREFIX"
 

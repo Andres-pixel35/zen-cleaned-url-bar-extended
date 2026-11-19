@@ -87,6 +87,18 @@ out_lacks() { ! grep -qF -- "$1" "$T/out"; }
 json_ok() { python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$1" 2>/dev/null; }
 json_eval() { python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(eval(sys.argv[2]))' "$1" "$2"; }
 mode_of() { ls -l "$1" | cut -c2-10; }
+# Zen's combined mod stylesheet of profile $1 lists exactly the mods named $2..., in this order.
+css_mods() {
+    local css="$1/chrome/zen-themes.css" want=""
+    shift
+    [ $# -gt 0 ] && want=$(printf '/* Name: %s */\n' "$@")
+    [ -f "$css" ] && [ "$(grep '^/\* Name: ' "$css")" = "$want" ] && tail -n 1 "$css" | grep -qxF '/* End of Zen Mods */'
+}
+# The stylesheet of profile $1 holds this project's chrome.css, whole.
+css_has_mod() { python3 -c 'import sys; sys.exit(open(sys.argv[2]).read() not in open(sys.argv[1]).read())' "$1/chrome/zen-themes.css" "$ROOT/chrome.css"; }
+# Number of this mod's options that have a default in preferences.json.
+N_DEFAULTS=$(python3 -c 'import json,sys; print(sum("defaultValue" in p for p in json.load(open(sys.argv[1]))))' "$ROOT/preferences.json")
+mod_pref_count() { grep -v questions-seen "$1/prefs.js" | grep -c '^user_pref("mod\.cleanedurlbarext\.'; }
 
 
 # ---------------------------------------------------------------- tests ----
@@ -126,8 +138,12 @@ Version=2
 Default=Profiles/abc.Default (release)
 Locked=1
 EOF
-    echo '{"other-mod":{"id":"other-mod","name":"Other","enabled":true}}' >"$zen/Profiles/abc.Default (release)/zen-themes.json"
     p="$zen/Profiles/abc.Default (release)"
+    # Two other mods: one enabled, one turned off in Zen.
+    echo '{"other-mod":{"id":"other-mod","name":"Other","enabled":true},"off-mod":{"id":"off-mod","name":"Off","enabled":false}}' >"$p/zen-themes.json"
+    mkdir -p "$p/chrome/zen-themes/other-mod" "$p/chrome/zen-themes/off-mod"
+    echo '/* other mod */' >"$p/chrome/zen-themes/other-mod/chrome.css"
+    echo '/* off mod */' >"$p/chrome/zen-themes/off-mod/chrome.css"
     run install.sh --no-configure
     check "install (legacy ~/.zen) succeeds" [ $? -eq 0 ]
     check "install picks the [Install] default over Default=1" out_has "Using Zen profile \"Default (release)\""
@@ -139,9 +155,17 @@ EOF
     check "entry enabled" [ "$(json_eval "$p/zen-themes.json" 'd["zen-cleaned-url-bar-extended"]["enabled"]')" = True ]
     check "entry has preferences url" [ "$(json_eval "$p/zen-themes.json" 'd["zen-cleaned-url-bar-extended"]["preferences"].startswith("https://")')" = True ]
     check "user's own mod value kept" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.blur", "3px");'
-    check "no option defaults written (Zen writes them)" [ "$(grep -v questions-seen "$p/prefs.js" | grep -c '^user_pref("mod\.cleanedurlbarext\.')" -eq 1 ]
-    check "install records the questions as seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 1);'
-    check "rebuild requested (last-update cleared)" no_line "$p/prefs.js" 'zen.mods.last-update'
+    check "option defaults written for the options without a value" [ "$(mod_pref_count "$p")" -eq "$N_DEFAULTS" ]
+    check "string default written" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.radius", "15px");'
+    check "checkbox defaults written" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.hideseparator", true);' &&
+        has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.noshadow", false);'
+    check "dropdown default written" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.background", "accent");'
+    check "no browser preference written" no_line "$p/prefs.js" 'zen.urlbar.behavior'
+    check "install records the questions as seen" has_line "$p/prefs.js" "user_pref(\"mod.cleanedurlbarext.questions-seen\", $REV);"
+    check "stylesheet built with the enabled mods, in order" css_mods "$p" Other "Cleaned URL Bar Extended"
+    check "stylesheet holds the whole chrome.css" css_has_mod "$p"
+    check "stylesheet leaves out the disabled mod" no_line "$p/chrome/zen-themes.css" '/* off mod */'
+    check "zen.mods.last-update left alone" has_line "$p/prefs.js" 'user_pref("zen.mods.last-update", 1792688010);'
     check "unrelated pref kept" has_line "$p/prefs.js" 'user_pref("browser.urlbar.suggest.searches", false);'
     check "prefs.js permissions kept" [ "$(mode_of "$p/prefs.js")" = "rw-------" ]
     check "prefs.js backup made" grep -q 'zen.mods.last-update' "$p/prefs.js.cleanedurlbarext.bak"
@@ -160,6 +184,7 @@ EOF
     check "reinstall keeps disabled mod disabled" [ "$(json_eval "$p/zen-themes.json" 'd["zen-cleaned-url-bar-extended"]["enabled"]')" = False ]
     check "reinstall keeps user value" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.blur", "3px");'
     check "no duplicate pref lines" [ "$(grep -c 'mod.cleanedurlbarext.panel.blur' "$p/prefs.js")" -eq 1 ]
+    check "a disabled mod is left out of the stylesheet" css_mods "$p" Other
 
     # update: nothing at all happens when the installed mod is current.
     rm -f "$p"/*.cleanedurlbarext.bak
@@ -172,7 +197,7 @@ EOF
     check "up-to-date update leaves zen-themes.json alone" cmp -s "$T/themes-before" "$p/zen-themes.json"
     check "up-to-date update makes no backups" [ ! -e "$p/prefs.js.cleanedurlbarext.bak" ]
 
-    # update: an older installed copy is replaced and Zen is asked to rebuild.
+    # update: an older installed copy is replaced and the stylesheet rebuilt.
     m="$p/chrome/zen-themes/zen-cleaned-url-bar-extended"
     echo '/* old */' >>"$m/chrome.css"
     python3 - "$p/zen-themes.json" <<'EOF'
@@ -180,7 +205,7 @@ import json, sys
 d = json.load(open(sys.argv[1])); d["zen-cleaned-url-bar-extended"]["version"] = "0.9.0"
 json.dump(d, open(sys.argv[1], "w"))
 EOF
-    echo 'user_pref("zen.mods.last-update", 1792688010);' >>"$p/prefs.js"
+    sed '/mod\.cleanedurlbarext\.panel\.radius/d' "$p/prefs.js" >"$T/prefs" && cat "$T/prefs" >"$p/prefs.js"
     run update.sh
     check "update succeeds" [ $? -eq 0 ]
     check "update reports the versions" out_has "0.9.0 -> "
@@ -188,9 +213,25 @@ EOF
     check "update writes the new version" [ "$(json_eval "$p/zen-themes.json" 'd["zen-cleaned-url-bar-extended"]["version"]')" = "$(json_eval "$ROOT/theme.json" 'd["version"]')" ]
     check "update keeps the mod disabled" [ "$(json_eval "$p/zen-themes.json" 'd["zen-cleaned-url-bar-extended"]["enabled"]')" = False ]
     check "update keeps other mods" [ "$(json_eval "$p/zen-themes.json" '"other-mod" in d')" = True ]
-    check "update requests a rebuild" no_line "$p/prefs.js" 'zen.mods.last-update'
+    check "update rebuilds the stylesheet (mod still disabled)" css_mods "$p" Other
     check "update keeps user value" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.blur", "3px");'
-    check "update adds no option defaults" [ "$(grep -v questions-seen "$p/prefs.js" | grep -c '^user_pref("mod\.cleanedurlbarext\.')" -eq 1 ]
+    check "a disabled mod gets no defaults" no_line "$p/prefs.js" 'mod.cleanedurlbarext.panel.radius'
+
+    # update: once enabled again, a stylesheet that does not have the current look
+    # (what Zen 1.24.3b+ keeps after an install by an older version) is rebuilt,
+    # and missing defaults are written.
+    python3 - "$p/zen-themes.json" <<'EOF'
+import json, sys
+d = json.load(open(sys.argv[1])); d["zen-cleaned-url-bar-extended"]["enabled"] = True
+json.dump(d, open(sys.argv[1], "w"))
+EOF
+    : >"$p/chrome/zen-themes.css"
+    run update.sh
+    check "update repairs a stale stylesheet" out_has "Updated the files" && css_mods "$p" Other "Cleaned URL Bar Extended" && css_has_mod "$p"
+    check "update writes a missing default" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.radius", "15px");'
+    check "update keeps the user value over the default" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.panel.blur", "3px");'
+    run update.sh
+    check "update is then up to date" out_has "already up to date"
 
     # update: changed files with the same version are refreshed too.
     echo '{}' >"$m/preferences.json"
@@ -210,6 +251,7 @@ EOF
     check "mod folder removed" [ ! -e "$p/chrome/zen-themes/zen-cleaned-url-bar-extended" ]
     check "entry removed" [ "$(json_eval "$p/zen-themes.json" '"zen-cleaned-url-bar-extended" in d')" = False ]
     check "other mod still there" [ "$(json_eval "$p/zen-themes.json" '"other-mod" in d')" = True ]
+    check "uninstall rebuilds the stylesheet without the mod" css_mods "$p" Other
     check "mod prefs removed" no_line "$p/prefs.js" 'mod.cleanedurlbarext.'
     check "browser pref kept" has_line "$p/prefs.js" 'user_pref("browser.urlbar.maxRichResults", 5);'
     run uninstall.sh -y --reset-prefs
@@ -218,6 +260,11 @@ EOF
     check "reset-prefs removes suggest.searches" no_line "$p/prefs.js" 'browser.urlbar.suggest.searches'
     check "reset-prefs lists what it reset" out_has "browser.urlbar.maxRichResults"
     check "reset-prefs leaves no backup" [ ! -e "$p/prefs.js.cleanedurlbarext.bak" ]
+
+    # A stylesheet that still has the mod (Zen 1.24.3b+ never rebuilt it) is cleaned up.
+    printf '/* Name: Cleaned URL Bar Extended */\n' >>"$p/chrome/zen-themes.css"
+    run uninstall.sh -y
+    check "leftover stylesheet part removed" css_mods "$p" Other
 
     # Leftover backups (configure.sh works without the mod) go with uninstall too.
     echo 'x' >"$p/prefs.js.cleanedurlbarext.bak"
@@ -315,14 +362,49 @@ test_invalid_themes_json() {
     run update.sh
     check "invalid zen-themes.json stops the update" [ $? -ne 0 ]
     check "failed update leaves the installed files alone" cmp -s "$T/css-before" "$p/chrome/zen-themes/zen-cleaned-url-bar-extended/chrome.css"
+    check "failed update leaves the stylesheet alone" css_mods "$p" "Cleaned URL Bar Extended"
+
+    # uninstall still removes the mod, but leaves the file and the stylesheet:
+    # rebuilding from a broken list would drop the user's other mods.
+    cp "$p/chrome/zen-themes.css" "$T/stylesheet-before"
+    run uninstall.sh -y
+    check "uninstall works with a broken zen-themes.json" [ $? -eq 0 ] && [ ! -e "$p/chrome/zen-themes/zen-cleaned-url-bar-extended" ]
+    check "and warns that it left it alone" out_has "zen-themes.json is not valid JSON, so it and Zen's mod stylesheet were left"
+    check "stylesheet kept" cmp -s "$T/stylesheet-before" "$p/chrome/zen-themes.css"
+}
+
+# How the stylesheet treats mods Zen would skip, and Zen's "all mods off" switch.
+test_mods_stylesheet() {
+    new_home
+    local zen="$HOME_DIR/.zen" p
+    make_profile "$zen" "Profiles/s.s"
+    printf '[Profile0]\nName=S\nIsRelative=1\nPath=Profiles/s.s\nDefault=1\n' >"$zen/profiles.ini"
+    p="$zen/Profiles/s.s"
+    # A mod whose files are missing, and one whose id would point outside its folder.
+    echo '{"gone":{"id":"gone","name":"Gone"},"sneaky":{"id":"../x","name":"Sneaky"}}' >"$p/zen-themes.json"
+    run install.sh --no-configure
+    check "install works with broken mods in the list" [ $? -eq 0 ]
+    check "a mod without chrome.css is left out with a warning" out_has 'The mod "gone"' && out_has 'The mod "sneaky"'
+    check "the rest of the stylesheet is built" css_mods "$p" "Cleaned URL Bar Extended" && css_has_mod "$p"
+
+    # With every mod turned off in Zen, Zen builds an empty stylesheet.
+    echo '{}' >"$p/zen-themes.json"
+    echo 'user_pref("zen.themes.disable-all", true);' >>"$p/prefs.js"
+    run install.sh --no-configure
+    check "all mods off: empty stylesheet" css_mods "$p"
+    run update.sh
+    check "all mods off: update has nothing to repair" out_has "already up to date"
 }
 
 # A newer release of the project: Zen renamed a preference and a question was added.
+# The catalogue revision of this project (the highest "since").
+REV=$(grep -v '^#' "$ROOT/lib/catalogue.txt" | awk -F'|' 'NF == 8 && $8 > m { m = $8 } END { print m }')
+
 make_newer_project() {
     NEWER="$T/newer-project"
     rm -rf "$NEWER"
     cp -R "$ROOT" "$NEWER"
-    python3 - "$NEWER/lib/catalogue.txt" <<'EOF'
+    python3 - "$NEWER/lib/catalogue.txt" "$((REV + 1))" <<'EOF'
 import sys
 p = sys.argv[1]; lines = open(p).read().split("\n")
 out = []
@@ -331,7 +413,7 @@ for l in lines:
         out.append("@renamed|browser.urlbar.oldTrimWww|browser.urlbar.trimWww")
     out.append(l)
     if l.startswith("bool|browser.urlbar.suggest.bookmark|"):
-        out.append("bool|browser.urlbar.suggest.newthing|true||Suggest the new thing?|||2")
+        out.append("bool|browser.urlbar.suggest.newthing|true||Suggest the new thing?|||" + sys.argv[2])
 open(p, "w").write("\n".join(out))
 EOF
 }
@@ -357,7 +439,7 @@ test_update_behaviour() {
     check "new question announced" out_has "1 new URL bar behaviour question(s)"
     check "new question listed" out_has "Suggest the new thing?"
     check "without a terminal it points to configure.sh" out_has "run configure.sh"
-    check "unanswered questions are not marked seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 1);'
+    check "unanswered questions are not marked seen" has_line "$p/prefs.js" "user_pref(\"mod.cleanedurlbarext.questions-seen\", $REV);"
 
     # A value already saved under the new name wins over the old one.
     echo 'user_pref("browser.urlbar.oldTrimWww", false);' >>"$p/prefs.js"
@@ -383,13 +465,13 @@ test_update_behaviour() {
     # Declining keeps them for the next update.
     PROJ=$NEWER run_tty $'n\n' update.sh
     check "declined questions are offered again later" out_has "offered again at the next update"
-    check "declining does not mark them seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 1);'
+    check "declining does not mark them seen" has_line "$p/prefs.js" "user_pref(\"mod.cleanedurlbarext.questions-seen\", $REV);"
 
     # Answering: only the new question is asked, then saved and marked seen.
     PROJ=$NEWER run_tty $'y\nn\ny\n' update.sh
     check "only the new question is asked" [ "$(grep -c 'Currently:' "$T/out")" -eq 1 ]
     check "new answer saved" has_line "$p/prefs.js" 'user_pref("browser.urlbar.suggest.newthing", false);'
-    check "questions marked seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 2);'
+    check "questions marked seen" has_line "$p/prefs.js" "user_pref(\"mod.cleanedurlbarext.questions-seen\", $((REV + 1)));"
     PROJ=$NEWER run update.sh
     check "afterwards everything is up to date" out_has "already up to date"
 
@@ -398,7 +480,7 @@ test_update_behaviour() {
     echo 'user_pref("browser.urlbar.oldTrimWww", true);' >>"$p/prefs.js"
     sed -i '/browser.urlbar.trimWww/d' "$p/prefs.js"
     PROJ=$NEWER run_tty $'1\nq\n' configure.sh
-    check "configure marks questions seen" has_line "$p/prefs.js" 'user_pref("mod.cleanedurlbarext.questions-seen", 2);'
+    check "configure marks questions seen" has_line "$p/prefs.js" "user_pref(\"mod.cleanedurlbarext.questions-seen\", $((REV + 1)));"
     check "configure moves renamed values" has_line "$p/prefs.js" 'user_pref("browser.urlbar.trimWww", true);'
 
     # uninstall --reset-prefs resets old names too; leftovers go without the mod.
@@ -406,7 +488,7 @@ test_update_behaviour() {
     PROJ=$NEWER run uninstall.sh -y --reset-prefs
     check "reset covers old names" no_line "$p/prefs.js" 'oldTrimWww'
     check "reset lists the old name" out_has "browser.urlbar.oldTrimWww"
-    echo 'user_pref("mod.cleanedurlbarext.questions-seen", 2);' >>"$p/prefs.js"
+    echo "user_pref(\"mod.cleanedurlbarext.questions-seen\", $((REV + 1)));" >>"$p/prefs.js"
     PROJ=$NEWER run uninstall.sh -y
     check "leftover mod settings removed without the mod" no_line "$p/prefs.js" 'mod.cleanedurlbarext.'
     check "leftover removal reported" out_has "Removed the settings"
@@ -549,8 +631,11 @@ test_configure() {
 test_version_dependent_default() {
     new_home
     local zen="$HOME_DIR/.zen" p acrylic=zen.theme.acrylic-urlbar
-    # Section 3 ("Buttons and icons"): five questions kept, then the acrylic one.
-    local skip5=$'3\n\n\n\n\n\n'
+    # Section 3 ("Buttons and icons"): Enter (keep) for each question before the acrylic one.
+    local skip5=$'3\n' k n
+    n=$(awk -F'|' '/^@section/ { s++; next } /^#/ || NF != 8 { next }
+        s == 3 && $2 == "zen.theme.acrylic-urlbar" { print c + 0; exit } s == 3 { c++ }' "$ROOT/lib/catalogue.txt")
+    for ((k = 0; k < n; k++)); do skip5="$skip5"$'\n'; done
     make_profile "$zen" "Profiles/v.v"
     printf '[Profile0]\nName=V\nIsRelative=1\nPath=Profiles/v.v\nDefault=1\n' >"$zen/profiles.ini"
     p="$zen/Profiles/v.v"
@@ -628,7 +713,7 @@ test_pref_string_escaping() {
 # ----------------------------------------------------------------- main ----
 
 for t in test_bootstrap_blocks_identical test_install_legacy_root test_xdg_flatpak_and_ambiguity \
-    test_absolute_profile_and_fresh_files test_macos_layout test_invalid_themes_json test_zen_running \
+    test_absolute_profile_and_fresh_files test_macos_layout test_invalid_themes_json test_mods_stylesheet test_zen_running \
     test_configure test_version_dependent_default test_pref_string_escaping test_backup_removal_failure \
     test_update_behaviour test_nothing_left_behind; do
     $t

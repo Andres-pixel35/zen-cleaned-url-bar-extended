@@ -149,7 +149,7 @@ main() {
             say "They will be offered again at the next update, or run configure.sh to answer them."
         fi
     fi
-    [ -n "$look" ] && say "    Start Zen: the update is applied a moment after startup."
+    [ -n "$look" ] && say "    Start Zen to see the update."
     return 0
 }
 
